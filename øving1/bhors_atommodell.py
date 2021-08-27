@@ -1,3 +1,5 @@
+
+
 BOHRS_KONSTANT = 2.18 * 10**-18
 
 fra_nivå = int(input("fra nivå?"))
@@ -23,5 +25,6 @@ if frekvens < 700*10^-9:
     print("ultrafiolett")
 elif frekvens < 625* 10**-9:
     print("infrarødt")
-else: 
+else:
     print("synelig lys")
+    
