@@ -1,5 +1,4 @@
 
-import math
 
 a = int(input("koeffisient a: "))
 b = int(input("koeffisient b: "))

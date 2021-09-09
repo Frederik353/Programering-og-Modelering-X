@@ -1,7 +1,7 @@
 import random
 
 
-liste = random.sample(range(100),5)
+liste = random.sample(range(100),100)
 
 print(liste)
 
@@ -15,10 +15,10 @@ def antall_i_aldersgruppe(ALDERSGRUPPER, liste):
                 antall_i_gruppe = len(liste)
                 aldersgruppe_string = "har en alder"
             else:
-                antall_i_gruppe = len([1 for j in liste if j > ALDERSGRUPPE[1]])
-                aldersgruppe_string = f"{ALDERSGRUPPE[1]}år og under"
+                antall_i_gruppe = len([0 for j in liste if j < ALDERSGRUPPE[1]])
+                aldersgruppe_string = f"under {ALDERSGRUPPE[1] + 1}år"
         elif ALDERSGRUPPE[1] == "undefined":
-            antall_i_gruppe = len([1 for j in liste if j < ALDERSGRUPPE[0]])
+            antall_i_gruppe = len([1 for j in liste if j > ALDERSGRUPPE[0]])
             aldersgruppe_string = f"{ALDERSGRUPPE[0]}år og over"
         else:
             antall_i_gruppe =  len([1 for j in liste if j < ALDERSGRUPPE[1]]) - len([1 for j in liste if j < ALDERSGRUPPE[0]])

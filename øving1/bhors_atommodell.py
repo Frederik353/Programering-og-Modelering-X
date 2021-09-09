@@ -27,4 +27,3 @@ elif frekvens < 625* 10**-9:
     print("infrarødt")
 else:
     print("synelig lys")
-    
