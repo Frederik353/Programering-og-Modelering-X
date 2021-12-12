@@ -49,7 +49,7 @@ def sum_under(plot, graphX, graphY, barX, barY):
     return sum_area(barY)
 
 
-def reigenvalue(upper):
+def riemann_sum(upper):
     sum_array = []
     prev = x[0]
     for i in x[1:]:
@@ -88,12 +88,12 @@ plt.title(f"Left Riemann Sum, N = {N}, A = {sum}")
 
 # lower
 sum_under(4, X, Y, x_right, y_right)
-sum = reigenvalue(False)
+sum = riemann_sum(False)
 plt.title(f"Lower Riemann Sum, N = {N}, A = {sum}")
 
 # upper
 sum_under(5, X, Y, x_right, y_right)
-sum = reigenvalue(True)
+sum = riemann_sum(True)
 plt.title(f"Upper Riemann Sum, N = {N}, A = {sum}")
 
 # Trapezoidal

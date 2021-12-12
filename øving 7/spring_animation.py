@@ -17,6 +17,7 @@ simulation_time = 30.0
 mass = 2 # mass
 k = 3 # spring coefficient
 b = 0.1 # damping coefficient
+# b = 2*np.sqrt(k*mass)# critical damping coefficient
 
 
 
@@ -126,7 +127,7 @@ def set(args):
 
 if __name__ == "__main__":
 
-    fig, ax = plt.subplots(2,2,figsize=(13,9))
+    fig, ax = plt.subplots(2, 2, figsize=(13, 8))
     plt.subplots_adjust( hspace= 0.3)
     plots = [0]
 
