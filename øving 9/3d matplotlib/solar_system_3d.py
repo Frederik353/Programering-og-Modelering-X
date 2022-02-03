@@ -7,45 +7,55 @@ import numpy as np
 
 from vectors import Vector
 
-class SolarSystem:
-    def __init__(self, size):
-        self.size = size
-        # self.projection_2d = projection_2d
-        self.bodies = []
 
-        # self.fig, self.ax = plt.subplots( 1, 1, subplot_kw={projection: "3d"}, figsize=(10, 8),)
+class SolarSystem:
+    def __init__(self, size, save=False):
+        self.size = size
+        self.bodies = []
+        self.save_gif = save
+
         self.fig = plt.figure(figsize=(13, 8))
+        plt.style.use('dark_background')
+        self.fig.patch.set_facecolor("black")
+        plt.rcParams['grid.color'] = (1, 1, 1, 0.1)
         self.fig.tight_layout()
-        # self.ax = []
+        self.ax = []
+        grid = self.fig.add_gridspec(2, 3)
+        self.ax.append(self.fig.add_subplot(grid[0, 0:1], projection="3d"))
+        self.ax.append(self.fig.add_subplot(grid[1:, 0:1], projection="3d"))
+        self.ax.append(self.fig.add_subplot(grid[0:2, 1:3], projection="3d"))
+        self.sim_time_label = self.ax[2].text2D(
+            0, 0.95, '', transform=self.ax[2].transAxes)
+
         self.m1, self.m2 = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
 
-        # grid = fig.add_gridspec(2, 3)
-        # self.ax.append(fig.add_subplot(projection="3d"))
-        self.ax = self.fig.add_subplot(projection="3d")
+        border = 5e8 / 2
+        self.init_plots(0, -border, border, -border, border, -border, border, "Distance: (m)", "Distance: (m)",
+                        "Distance: (m)", "title", (0, 0, 0), 45, 45)  # limits fixed later
+        border = 12e12 / 2
+        self.init_plots(1, -border, border, -border, border, -border, border,
+                        "Distance: (m)", "Distance: (m)", "Distance: (m)", "title", (0, 0, 0), 45, 45)
+        border = 5e11 / 2
+        self.init_plots(2, -border, border, -border, border, -border, border,
+                        "Distance: (m)", "Distance: (m)", "Distance: (m)", "title", (0, 0, 0), 45, 45)
 
-        # if self.projection_2d:
-            # self.ax.view_init(10, 0)
-        # else:
-            # self.ax.view_init(0, 0)
-
-        # self.fig.tight_layout()
-        self.ax.set_xlim((-self.size / 2, self.size / 2))
-        self.ax.set_ylim((-self.size / 2, self.size / 2))
-        self.ax.set_zlim((-self.size / 2, self.size / 2))
+    def init_plots(self, plot, xmin, xmax, ymin, ymax, zmin, zmax, xlabel, ylabel, zlabel, title, bgcolor, elevation, azimuth):
+        self.ax[plot].set_xlim((xmin, xmax))
+        self.ax[plot].set_ylim((ymin, ymax))
+        self.ax[plot].set_zlim((zmin, zmax))
+        self.ax[plot].set_xlabel(xlabel)
+        self.ax[plot].set_ylabel(ylabel)
+        self.ax[plot].set_zlabel(zlabel)
+        self.ax[plot].w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0))
+        self.ax[plot].w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0))
+        self.ax[plot].w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0))
+        # ax[plotx, ploty].grid()
+        # ax[plotx,ploty].legend()
+        self.ax[plot].set_title(title)
+        self.ax[plot].view_init(elevation, azimuth)
 
     def add_body(self, body):
         self.bodies.append(body)
-
-    # def draw_all(self):
-        # self.ax.set_xlim((-self.size / 2, self.size / 2))
-        # self.ax.set_ylim((-self.size / 2, self.size / 2))
-        # self.ax.set_zlim((-self.size / 2, self.size / 2))
-        # if self.projection_2d:
-        #     self.ax.xaxis.set_ticklabels([])
-        #     self.ax.yaxis.set_ticklabels([])
-        #     self.ax.zaxis.set_ticklabels([])
-        # else:
-        #     self.ax.axis(False)
 
     def calculate_all_body_interactions(self):
         bodies_copy = self.bodies.copy()
@@ -53,43 +63,113 @@ class SolarSystem:
             for second in bodies_copy[idx + 1:]:
                 first.accelerate_due_to_gravity(second)
 
+    def run(self):
+        self.ax[2].legend()
+        self.ani = animation.FuncAnimation(self.fig, self.update, fargs=(
+        ), interval=1, save_count=1_00, frames=10_00, blit=False)
+
+        if (self.save_gif):
+            self.save()
+        plt.show()
+
     def save(self):
         # set output file
         f = r"./animation.gif"
-        writer = animation.FFMpegWriter(fps=60, bitrate=18000)
+        writer = animation.FFMpegWriter(fps=60, bitrate=18_000)
         self.ani.save(f)
 
     def update(self, framenum):
-        # return [] + self.bodies
-        self.bodies.sort(key=lambda item: item.position[0])
-        # foo = np.ndarray()
+
+        # self.bodies.sort(key=lambda item: item.position[0])
+
+        self.sim_time_label.set_text(f"Day: {framenum}")
+        print(framenum)
+
         foo = []
-        for body in self.bodies:
+        self.calculate_all_body_interactions()
+        for int, body in enumerate(self.bodies):
             body.move()
-            # print("-------------------------")
-            # print(*body.position)
-            # body.plot.set(offsets=body.position)
-            # body.plot.set(offsets=body.position,color="r")
 
-            # if (body.sphere):
-                # self.ax.collections.remove(body.sphere)
+            for plot, axis in enumerate(self.ax):
+                if (plot == 0):
+                    continue
 
-            # parameter fremsitilling av en kule
-            # print(body.position)
-            # x = body.position[0] + body.radius * np.cos(self.m1)*np.sin(self.m2)
-            # y = body.position[1] + body.radius * np.sin(self.m1)*np.sin(self.m2)
-            # z = body.position[2] + body.radius * np.cos(self.m2)
-            # body.sphere = self.ax.plot_wireframe( x, y, z,  rstride=1, cstride=1, color='b', linewidth=0.25)
-            # body.sphere.set(offsets=body.position)
-            body.sphere.set(offsets=[1e10, 0, 0])
-            foo.append(body.sphere)
-        print(foo)
+                body.posarr[plot][0].append(body.position[0])
+                body.posarr[plot][1].append(body.position[1])
+                body.posarr[plot][2].append(body.position[2])
 
-        return foo
+                # print(axis.collections, body.sphere[plot])
+                axis.collections.remove(body.sphere[plot])
 
-    def run(self):
-        self.ani = animation.FuncAnimation(self.fig, self.update, fargs=(), interval=1, save_count=50,frames=50, blit=True)
-        plt.show()
+                radiusfactor = [1e7, 2e11, 1.2e10]
+                # parameter fremsitilling av en kule
+                x = body.position[0] + (body.radius +
+                                        radiusfactor[plot]) * np.cos(self.m1)*np.sin(self.m2)
+                y = body.position[1] + (body.radius +
+                                        radiusfactor[plot]) * np.sin(self.m1)*np.sin(self.m2)
+                z = body.position[2] + (body.radius +
+                                        radiusfactor[plot]) * np.cos(self.m2)
+                body.sphere[plot] = axis.plot_wireframe(
+                    x, y, z,  rstride=1, cstride=1, color='b', linewidth=0.25, facecolor=body.color, antialiased=True)
+
+                body.trace[plot][0].set(
+                    data_3d=(body.posarr[plot][0], body.posarr[plot][1], body.posarr[plot][2]), color=body.color)
+
+                axis.texts.remove(body.text[plot])
+
+                foo = 7e11
+
+                body.text[plot] = axis.text(
+                    *np.add(body.position, foo * 1e-1), body.name)
+
+                if (body.name == "Earth" and plot == 0):
+                    axis.set_xlim(
+                        (body.position[0] - foo, body.position[0] + foo))
+                    axis.set_ylim(
+                        (body.position[1] - foo, body.position[1] + foo))
+                    axis.set_zlim(
+                        (body.position[2] - foo, body.position[2] + foo))
+
+            # for index in [4,5]:
+            if (body.name == "Earth" or body.name == "Moon"):
+                plot = 0
+
+                self.ax[plot].collections.remove(body.sphere[plot])
+
+                radiusfactor = [2e7]
+
+                if (body.name == "Earth"):
+                    position = [0, 0, 0]
+                else:
+                    position = [
+                        body.position[0] - self.bodies[3].position[0],
+                        body.position[1] - self.bodies[3].position[1],
+                        body.position[2] - self.bodies[3].position[2],
+                    ]
+
+                body.posarr[plot][0].append(position[0])
+                body.posarr[plot][1].append(position[1])
+                body.posarr[plot][2].append(position[2])
+
+                # parameter fremsitilling av en kule
+                x = position[0] + (body.radius + radiusfactor[plot]
+                                   ) * np.cos(self.m1)*np.sin(self.m2)
+                y = position[1] + (body.radius + radiusfactor[plot]
+                                   ) * np.sin(self.m1)*np.sin(self.m2)
+                z = position[2] + (body.radius +
+                                   radiusfactor[plot]) * np.cos(self.m2)
+                body.sphere[plot] = self.ax[plot].plot_wireframe(
+                    x, y, z,  rstride=1, cstride=1, color='b', linewidth=0.25, facecolor=body.color, antialiased=True)
+
+                body.trace[plot][0].set(
+                    data_3d=(body.posarr[plot][0], body.posarr[plot][1], body.posarr[plot][2]), color=body.color)
+
+                self.ax[plot].texts.remove(body.text[plot])
+                foo = 1e8
+                body.text[plot] = self.ax[plot].text(
+                    *np.add(position, foo), body.name)
+
+        return self.ax
 
 
 class SolarSystemBody:
@@ -99,107 +179,102 @@ class SolarSystemBody:
     def __init__(
         self,
         solar_system,
-        mass,
+        mass=1e20,
         position=(0, 0, 0),
         velocity=(0, 0, 0),
-        radius=1e10
+        radius=1e10,
+        color="magenta",
+        name="Unknown"
     ):
         self.solar_system = solar_system
         self.mass = mass
         self.position = position
         self.velocity = Vector(velocity)
-        self.display_size = max( math.log(self.mass, self.display_log_base), self.min_display_size,)
-        self.colour = "black"
+        self.display_size = max(
+            math.log(self.mass, self.display_log_base), self.min_display_size,)
+        self.color = color
+        self.name = name
         self.radius = radius
 
         self.m1, self.m2 = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
         x = self.radius * np.cos(self.m1)*np.sin(self.m2)
         y = self.radius * np.sin(self.m1)*np.sin(self.m2)
         z = self.radius * np.cos(self.m2)
-        self.sphere = self.solar_system.ax.plot_wireframe( x, y, z, rstride=1, cstride=1, color='b', linewidth=0.25)
+
+        self.sphere = []
+        self.trace = []
+        self.text = []
+        foo = 2 * 1e8
+        for plot, axis in enumerate(self.solar_system.ax):
+            self.trace.append(axis.plot3D(
+                [], [], [], linewidth=1, color=self.color, label=self.name))
+            if (plot == 0 and not (self.name == "Earth" or self.name == "Moon")):
+                self.sphere.append("empty")
+                # self.trace.append("empty")
+                self.text.append("empty")
+                continue
+
+            self.sphere.append(axis.plot_wireframe(
+                x, y, z, rstride=1, cstride=1, color=self.color, linewidth=0.25, label=self.name))
+            self.text.append(
+                axis.text(*np.add(self.position, foo * 1e-2), self.name))
+
+        self.posarr = [[[], [], []], [[], [], []], [[], [], []]]
 
         self.solar_system.add_body(self)
 
-
-        # self.plot = self.solar_system.ax.scatter( *self.position, marker="o", linewidth=self.display_size + self.position[0] / 30, color=self.colour)
-        # self.plot = self.solar_system.ax.scatter( *self.position, marker="o", linewidth=1000, color=self.colour)
-        # self.plot.set_animated(true)
-        # print(self.plot)
-
     def move(self):
-        # self.position = tuple(np.add(self.position, self.velocity))
+        foo = 8.64e4
         self.position = (
-            self.position[0] + self.velocity[0],
-            self.position[1] + self.velocity[1],
-            self.position[2] + self.velocity[2],
+            self.position[0] + self.velocity[0] * foo,
+            self.position[1] + self.velocity[1] * foo,
+            self.position[2] + self.velocity[2] * foo,
         )
 
-    # def draw(self):
-        # self.solar_system.ax.plot( *self.position, marker="o", markersize=self.display_size + self.position[0] / 30, color=self.colour)
-        # if self.solar_system.projection_2d:
-        #     self.solar_system.ax.plot(
-        #         self.position[0],
-        #         self.position[1],
-        #         -self.solar_system.size / 2,
-        #         marker="o",
-        #         markersize=self.display_size / 2,
-        #         color=(.5, .5, .5),
-        #     )
-
     def accelerate_due_to_gravity(self, other):
+
         distance = Vector(other.position) - Vector(self.position)
-        # print(repr(distance))
         distance_mag = distance.get_magnitude()
 
-        force_mag = self.mass * other.mass / (distance_mag ** 2)
+        G = 6.67408e-11  # m**3 kg**-1 s**-2
+        force_mag = G * (self.mass * other.mass / (distance_mag ** 2))
         force = distance.normalize() * force_mag
 
         reverse = 1
         for body in self, other:
-            acceleration = force / body.mass
-            body.velocity += acceleration * reverse
+            acceleration = (force / body.mass)
+            body.velocity += acceleration * (reverse * 8.64e4)
             reverse = -1
-
 
 
 class Sun(SolarSystemBody):
     def __init__(
         self,
         solar_system,
-        mass=10_000,
-        position=(0, 0, 0),
-        velocity=(0, 0, 0),
-        radius=1e10
+        mass,
+        position,
+        velocity,
+        radius, color, name
     ):
-        super(Sun, self).__init__(solar_system, mass, position, velocity, radius)
-        self.colour = "yellow"
+        super(Sun, self).__init__(solar_system, mass,
+                                  position, velocity, radius, color, name)
+
 
 class Planet(SolarSystemBody):
-    colours = itertools.cycle([(1, 0, 0), (0, 1, 0), (0, 0, 1)])
-
     def __init__(
         self,
         solar_system,
         mass=10,
         position=(0, 0, 0),
         velocity=(0, 0, 0),
-        radius=1e10
+        radius=1e10,
+        color="magenta",
+        name="Unknown"
     ):
-        super(Planet, self).__init__(solar_system, mass, position, velocity, radius)
-        self.colour = next(Planet.colours)
-
-# class simulation(SolarSystem):
-    
-    # def __init__(SolarSystem,):
-
-        # fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-
-        # title = ax.text(0.16, 0.97, f"Number of Iterations = {m}", bbox={'facecolor': 'w', 'alpha': 0.5, 'pad': 5}, transform=ax.transAxes, ha="center")
+        super(Planet, self).__init__(solar_system, mass,
+                                     position, velocity, radius, color, name)
 
 
-
-
-# while True:
-    # solar_system.calculate_all_body_interactions()
-    # solar_system.update_all()
-    # solar_system.draw_all()
+if __name__ == "__main__":
+    import config
+    config.main()

@@ -26,7 +26,8 @@ class Vector:
             return np.inner(self.vec, other.vec)
 
         elif isinstance(other, (int, float)):  # Scalar multiplication
-            return  Vector(self.vec * other)
+            # print(self.vec, other, np.multiply(self.vec, other))
+            return  Vector(np.multiply(self.vec, other))
 
         else:
             raise TypeError("operand must be Vector, int, or float")
@@ -43,4 +44,5 @@ class Vector:
 
     def normalize(self):
         magnitude = self.get_magnitude()
+        # print(Vector(self.vec / magnitude))
         return Vector(self.vec / magnitude)
