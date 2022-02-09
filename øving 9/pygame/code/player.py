@@ -38,17 +38,32 @@ class Player(pygame.sprite.Sprite):
         # character_path = '../Mario1/characters/mario.png'
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': []}
         self.character = spritesheet.spritesheet(
-            "../Mario1/characters/mario.png")
+            "./Mario/Characters/Mario.png")
         # self.character = spritesheet.spritesheet('.png')
         # Sprite is 16x16 pixels at location 0,0 in the file...
         size = 32
+        count = 25
 
         images = []
-        for animation in self.animations.keys():
-            for i in range(size * 8, size * 4, size):
-                image = self.character.image_at((i, 0, size, size))
-                images.append(image)
-        print(images)
+        # for animation in self.animations.keys():
+        images = self.character.load_strip(
+            (0, 0, size, size), count, (0, 0, 0))
+        self.animations["idle"].append(images[8])
+
+        self.animations["run"].append(images[9])
+        self.animations["run"].append(images[10])
+        self.animations["run"].append(images[11])
+        self.animations["jump"].append(images[13])
+        self.animations["fall"].append(images[13])
+
+        # print(self.animations)
+
+        # for i in range(size * 8, size * 4, size):
+        # image = self.character.image_at((i, 0, size, size))
+        # print("--------------------------------")
+        # print(image)
+        # print("--------------------------------")
+        # images.append(image)
         # Load two images into an array, their transparent bit is (255, 255, 255)
         # images = self.character.images_at((0, 0, 16, 16),(17, 0, ), colorkey=(255, 255, 255))
 
@@ -58,7 +73,7 @@ class Player(pygame.sprite.Sprite):
 
     def import_dust_run_particles(self):
         self.dust_run_particles = import_folder(
-            '../graphics/character/dust_particles/run')
+            './graphics/character/dust_particles/run')
 
     def animate(self):
         animation = self.animations[self.status]

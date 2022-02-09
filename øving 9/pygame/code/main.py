@@ -1,22 +1,23 @@
-import pygame, sys
-from settings import * 
+import sys
+import pygame
+from settings import *
 from level import Level
 
 # Pygame setup
 pygame.init()
-screen = pygame.display.set_mode((screen_width,screen_height))
+screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
-level = Level(level_map,screen)
+level = Level(level_map, screen)
 
 while True:
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			pygame.quit()
-			sys.exit()
-	
-	screen.fill((88, 191, 255))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
 
-	level.run()
+    screen.fill((88, 191, 255))
 
-	pygame.display.update()
-	clock.tick(60)
+    level.run()
+
+    pygame.display.update()
+    clock.tick(60)

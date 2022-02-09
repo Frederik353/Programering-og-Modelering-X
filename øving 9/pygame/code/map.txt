@@ -1,0 +1,12 @@
+level_map = [
+    '                                      ',
+    '                                      ',
+    '                                      ',
+    '           XX    XXX            XX    ',
+    '           XX P                       ',
+    'XXXXXXXXXXXXXXXX         XX         XX ',
+    'XXXXXXXXXXXXXXXX       XX              ',
+    'XXXXXXXXXXXXXX    X  XXXX    XX  XX    ',
+    'XXXXXXXXXXXX      X  XXXX    XX  XXX   ',
+    'XXXXXXXXXXXX   XXXX  XXXXXX  XX  XXXX  ',
+    'XXXXXXXXXXXXXXXXXXXX  XXXXX  XX  XXXX  ']
