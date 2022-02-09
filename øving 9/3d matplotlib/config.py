@@ -5,8 +5,8 @@ from solar_system_3d import SolarSystem, Sun, Planet
 
 def main():
     # solar_system = SolarSystem(11 * 1e12, save=False)
-    # solar_system = SolarSystem(5 * 1e11, save=False)
-    solar_system = SolarSystem(5 * 1e11, save=True)
+    solar_system = SolarSystem(5 * 1e11, save=False)
+    # solar_system = SolarSystem(5 * 1e11, save=True)
 
     suns = (
         Sun(solar_system, position=(1.81899e8, 9.83630e8, -1.58778e7), velocity=(-1.12474e1,
@@ -37,8 +37,6 @@ def main():
     )
 
     solar_system.run()
-
-# BODY PX PY PZ VX VY VZ MASS RADIUS
 
 
 if __name__ == "__main__":

@@ -62,6 +62,8 @@ class SolarSystem:
         for idx, first in enumerate(bodies_copy):
             for second in bodies_copy[idx + 1:]:
                 first.accelerate_due_to_gravity(second)
+        for int, body in enumerate(self.bodies):
+            body.move()
 
     def run(self):
         self.ax[2].legend()
@@ -81,22 +83,27 @@ class SolarSystem:
     def update(self, framenum):
 
         # self.bodies.sort(key=lambda item: item.position[0])
+        calculations_per_frame = 367
+        # earth orbit 367 days in model
 
-        self.sim_time_label.set_text(f"Day: {framenum}")
-        print(framenum)
+        self.sim_time_label.set_text(
+            f"Day: {framenum * calculations_per_frame}")
+        print(framenum * calculations_per_frame)
 
         foo = []
-        self.calculate_all_body_interactions()
+        for i in range(calculations_per_frame):
+            self.calculate_all_body_interactions()
+
         for int, body in enumerate(self.bodies):
-            body.move()
+            # body.move()
 
             for plot, axis in enumerate(self.ax):
                 if (plot == 0):
                     continue
 
-                body.posarr[plot][0].append(body.position[0])
-                body.posarr[plot][1].append(body.position[1])
-                body.posarr[plot][2].append(body.position[2])
+                # body.posarr[plot][0].append(body.position[0])
+                # body.posarr[plot][1].append(body.position[1])
+                # body.posarr[plot][2].append(body.position[2])
 
                 # print(axis.collections, body.sphere[plot])
                 axis.collections.remove(body.sphere[plot])
@@ -229,7 +236,12 @@ class SolarSystemBody:
             self.position[0] + self.velocity[0] * foo,
             self.position[1] + self.velocity[1] * foo,
             self.position[2] + self.velocity[2] * foo,
+
         )
+        for plot in range(1, 3):
+            self.posarr[plot][0].append(self.position[0])
+            self.posarr[plot][1].append(self.position[1])
+            self.posarr[plot][2].append(self.position[2])
 
     def accelerate_due_to_gravity(self, other):
 
