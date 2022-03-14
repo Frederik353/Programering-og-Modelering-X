@@ -16,10 +16,10 @@ class displayPygame:
     ):
         pygame.init()
         pygame.display.set_caption('Image')
-        self.screen_width = 800
+        self.screen_width = 1200
+        self.screen_height = 700
         # self.radiusAdder = 2e10
         self.radiusAdder = 3e11
-        self.screen_height = self.screen_width
 
         self.screen = pygame.display.set_mode(
             (self.screen_width, self.screen_height), pygame.RESIZABLE)
@@ -59,7 +59,6 @@ class displayPygame:
         self.solar_system.paused = not self.solar_system.paused
         # if self.solar_system.running:
         # self.solar_system.clock()
-        self.plotOrbits()
 
     def plotOrbits(self):
         def translate(x): return (x + self.offsetWidth) / self.pixelUnit
@@ -70,16 +69,26 @@ class displayPygame:
                       translate(body.posarr[1][index - 1]))
                 p2 = (translate(body.posarr[0][index]),
                       translate(body.posarr[1][index]))
-                line = pygame.draw.line(self.screen, body.color, p1, p2)
-                self.screen.blit(line)
+                line = pygame.Surface(p2, pygame.SRCALPHA)
+                pygame.draw.line(self.screen, body.color, p1, p2)
+                topLeftx = min(p1[0], p2[0])
+                topLefty = min(p1[1], p2[1])
+                self.screen.blit(line, (topLeftx, topLefty))
 
         lineSurface = pygame.Surface(
             (self.screen_width, self.screen_height), pygame.SRCALPHA)
-        line = pygame.draw.line(
-            lineSurface, (255, 255, 255), (0, 0), (self.screen_width, self.screen_height))
-        self.screen.blit(lineSurface, (0, 0))
+        # line = pygame.draw.line( self.screen, (0, 255, 255), (0, 0), (self.screen_width, self.screen_height))
 
-    def updateOrbits():
+        # RED = pygame.Color(255, 0, 0)
+
+        # size = (500, 500)
+
+        # image = pygame.Surface(size)
+        # pygame.draw.line(image, RED, (0, 0), (500, 500))
+
+        # self.screen.blit(image, (25, 25))
+
+    def updateOrbits(self):
         for body in self.solar_system.bodies:
             body.posarr[0].append(body.position[0])
             body.posarr[1].append(body.position[1])
@@ -168,10 +177,11 @@ class displayPygame:
                 self.resizeScreen(e)
 
     def updatePygame(self, framenum):
+        self.screen.fill((0, 0, 0))
         self.eventChecker()
         self.moveCamera()
-
-        pygame.display.update()
+        self.updateOrbits()
+        self.plotOrbits()
 
         if self.lockOnTo:
             self.lockOn()
@@ -180,7 +190,6 @@ class displayPygame:
 
         # self.moveCamera(pos=(self.solar_system.bodies[6].position[0] + (self.screen_width / 2) * self.pixelUnit, self.solar_system.bodies[6].position[1] + (self.screen_height*self.pixelUnit / 2)))
         # self.moveCamera(pos=( self.solar_system.bodies[6].position[0],  self.solar_system.bodies[6].position[1]))
-        self.screen.fill((0, 0, 0))
         for int, body in enumerate(self.solar_system.bodies):
             body.sprite.update(((body.position[0] + self.offsetWidth) / self.pixelUnit,
                                 (body.position[1] + self.offsetHeight) / self.pixelUnit))
