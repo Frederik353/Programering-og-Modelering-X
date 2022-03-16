@@ -37,61 +37,67 @@ class displayPygame:
         self.offsetWidth = self.pixelUnit * (self.screen_width / 2)
         self.sprites = []
 
+        universeSizeWidth = max(2 * self.size, self.screen_width * self.maxPixelUnit) / self.pixelUnit
+        universeSizeHeight = max(2 * self.size, self.screen_height * self.maxPixelUnit) / self.pixelUnit
+
+        self.orbits = pygame.Surface((universeSizeWidth, universeSizeHeight), pygame.SRCALPHA)
+        self.orbitSizePixels = abs(self.size / self.pixelUnit)
+
+        self.fontSize = 20
+        self.font = pygame.font.Font('freesansbold.ttf', self.fontSize)
+
     def init_objects(self, body, index):
         body.sprite = planetSprite(self, body, index)
         self.sprites.append(body.sprite)
         body.posarr = [[], []]  # lagrer bare 2d
+        # lagrer en verdi fra start for å hindre bane tegnigen i å krasje
+        body.posarr[0].append(body.position[0])
+        body.posarr[1].append(body.position[1])
 
     def resizeScreen(self, e):
-
-        # surface = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-        # if event.type == pygame.VIDEORESIZE:
         old_surface_saved = self.screen
         self.screen = pygame.display.set_mode((e.w, e.h), pygame.RESIZABLE)
         self.screen_width = e.w
         self.screen_height = e.h
-        # On the next line, if only part of the window
-        # needs to be copied, there's some other options.
         self.screen.blit(old_surface_saved, (0, 0))
         del old_surface_saved
 
     def pauseSim(self):
         self.solar_system.paused = not self.solar_system.paused
-        # if self.solar_system.running:
-        # self.solar_system.clock()
 
     def plotOrbits(self):
-        def translate(x): return (x + self.offsetWidth) / self.pixelUnit
+
+        self.orbitSizePixels = abs(self.size / self.pixelUnit)
+        self.orbits = pygame.Surface((self.orbitSizePixels, self.orbitSizePixels), pygame.SRCALPHA)
+
+
         for body in self.solar_system.bodies:
-            # antar antall posisjoner er lik i alle dimensjoner, og hopper over første posisjon
-            for index, pos in enumerate(body.posarr[0][1:]):
-                p1 = (translate(body.posarr[0][index - 1]),
-                      translate(body.posarr[1][index - 1]))
-                p2 = (translate(body.posarr[0][index]),
-                      translate(body.posarr[1][index]))
-                line = pygame.Surface(p2, pygame.SRCALPHA)
-                pygame.draw.line(self.screen, body.color, p1, p2)
-                topLeftx = min(p1[0], p2[0])
-                topLefty = min(p1[1], p2[1])
-                self.screen.blit(line, (topLeftx, topLefty))
+            for index in range(1, len(body.posarr[0])):
 
-        lineSurface = pygame.Surface(
-            (self.screen_width, self.screen_height), pygame.SRCALPHA)
-        # line = pygame.draw.line( self.screen, (0, 255, 255), (0, 0), (self.screen_width, self.screen_height))
+                p1 = ((self.translateX(body.posarr[0][index - 1]) - self.translateX(0)) + self.orbitSizePixels / 2, (self.translateY(body.posarr[1][index - 1]) - self.translateY(0)) + self.orbitSizePixels / 2)
+                p2 = ((self.translateX(body.posarr[0][index]) - self.translateX(0)) + self.orbitSizePixels / 2, (self.translateY(body.posarr[1][index]) - self.translateY(0)) + self.orbitSizePixels / 2)
 
-        # RED = pygame.Color(255, 0, 0)
+                pygame.draw.aaline(self.orbits, body.color, p1, p2)
 
-        # size = (500, 500)
-
-        # image = pygame.Surface(size)
-        # pygame.draw.line(image, RED, (0, 0), (500, 500))
-
-        # self.screen.blit(image, (25, 25))
+        rect = self.orbits.get_rect(
+            center=(self.translateX(0), self.translateY(0)))
+        self.screen.blit(self.orbits, rect)
 
     def updateOrbits(self):
+
         for body in self.solar_system.bodies:
             body.posarr[0].append(body.position[0])
             body.posarr[1].append(body.position[1])
+
+            p1 = ((self.translateX(body.posarr[0][-2]) - self.translateX(0)) + self.orbitSizePixels / 2,
+                  (self.translateY(body.posarr[1][-2]) - self.translateY(0)) + self.orbitSizePixels / 2)
+            p2 = ((self.translateX(body.posarr[0][-1]) - self.translateX(0)) + self.orbitSizePixels / 2,
+                  (self.translateY(body.posarr[1][-1]) - self.translateY(0)) + self.orbitSizePixels / 2)
+
+            pygame.draw.aaline(self.orbits, body.color, p1, p2)
+
+        rect = self.orbits.get_rect(center=(self.translateX(0), self.translateY(0)))
+        self.screen.blit(self.orbits, rect)
 
     def moveCamera(self, centerCoordinate=True, pos=None):
         keys = pygame.key.get_pressed()  # checking pressed keys
@@ -117,29 +123,45 @@ class displayPygame:
             self.offsetWidth -= speed
 
         # begrenser mengden det går ann å bevege seg i alle retningene
-
         # hvis skjermen viser ett omeråde større enn universet
-        unviverseSizeWidth = max(
-            2 * self.size, self.screen_width * self.maxPixelUnit)
-        unviverseSizeHeight = max(
-            2 * self.size, self.screen_height * self.maxPixelUnit)
+        unviverseSizeWidth = max( 2 * self.size, self.screen_width * self.maxPixelUnit)
+        unviverseSizeHeight = max( 2 * self.size, self.screen_height * self.maxPixelUnit)
 
         # nedre grense må kompansere for at skjermposisjonen er definert som øverste venstre hjørne
-        self.offsetWidth = max(- unviverseSizeWidth + self.screen_width *
-                               self.pixelUnit, min(self.offsetWidth, unviverseSizeWidth))
-        self.offsetHeight = max(- unviverseSizeHeight + self.screen_height *
-                                self.pixelUnit, min(self.offsetHeight, unviverseSizeHeight))
+        self.offsetWidth = max(- unviverseSizeWidth + self.screen_width * self.pixelUnit, min(self.offsetWidth, unviverseSizeWidth))
+        self.offsetHeight = max(- unviverseSizeHeight + self.screen_height * self.pixelUnit, min(self.offsetHeight, unviverseSizeHeight))
 
     def lockOn(self):
-        self.moveCamera(
-            pos=(self.lockOnTo.position[0], self.lockOnTo.position[1]))
+        self.moveCamera( pos=(self.lockOnTo.position[0], self.lockOnTo.position[1]))
 
     def dragAndDrop(self):
         x, y = pygame.mouse.get_pos()
         self.offsetWidth -= self.pixelUnit * (self.prevX - x)
         self.offsetHeight -= self.pixelUnit * (self.prevY - y)
+
+        # old_surface_saved = self.orbits
+
+        # rect = self.orbits.get_rect(topleft=(-self.offsetWidth * (self.prevY - y), -self.offsetHeight))
+        # self.screen.blit(old_surface_saved, rect)
+        # del old_surface_saved
+
         self.prevX = x
         self.prevY = y
+
+    def tag(self, body, pos):
+        bodyrect = body.sprite.image.get_rect()
+
+        point = (pos[0] + bodyrect[2] / 4, pos[1] - bodyrect[3]/2 * 0.7)
+
+        tag = pygame.Surface((200, 30), pygame.SRCALPHA)
+        text = self.font.render(body.name, True, (255, 255, 255))
+        textRect = text.get_rect(bottomleft=point)
+        pygame.draw.aaline(tag, body.color, (0, 30), (10, self.fontSize))
+        pygame.draw.aaline(tag, body.color, (10, self.fontSize), (textRect[2] + 10, self.fontSize))
+        tag.blit(text, (10, 0))
+
+        tagrect = tag.get_rect(bottomleft=point)
+        self.screen.blit(tag, tagrect)
 
     def eventChecker(self):
         for e in pygame.event.get():
@@ -173,26 +195,28 @@ class displayPygame:
                 if e.button == 1:
                     self.draging = False
             elif e.type == pygame.VIDEORESIZE:
-                # There's some code to add back window content here.
                 self.resizeScreen(e)
+
+    def translateX(self, x): return (x + self.offsetWidth) / self.pixelUnit
+
+    def translateY(self, y): return (y + self.offsetHeight) / self.pixelUnit
 
     def updatePygame(self, framenum):
         self.screen.fill((0, 0, 0))
         self.eventChecker()
         self.moveCamera()
         self.updateOrbits()
-        self.plotOrbits()
 
         if self.lockOnTo:
             self.lockOn()
         elif self.draging:
             self.dragAndDrop()
 
-        # self.moveCamera(pos=(self.solar_system.bodies[6].position[0] + (self.screen_width / 2) * self.pixelUnit, self.solar_system.bodies[6].position[1] + (self.screen_height*self.pixelUnit / 2)))
-        # self.moveCamera(pos=( self.solar_system.bodies[6].position[0],  self.solar_system.bodies[6].position[1]))
         for int, body in enumerate(self.solar_system.bodies):
-            body.sprite.update(((body.position[0] + self.offsetWidth) / self.pixelUnit,
-                                (body.position[1] + self.offsetHeight) / self.pixelUnit))
+            x = self.translateX(body.position[0])
+            y = self.translateY(body.position[1])
+            body.sprite.update(((x, y)))
+            self.tag(body, (x, y))
 
         pygame.display.update()
         # self.clock.tick(60)
@@ -213,6 +237,7 @@ class displayPygame:
         y = self.offsetHeight + (y * self.pixelUnit - y * prevPixelUnit)
 
         self.moveCamera(centerCoordinate=False, pos=(x, y))
+        self.plotOrbits()
 
 
 class planetSprite(pygame.sprite.Sprite):
@@ -224,10 +249,6 @@ class planetSprite(pygame.sprite.Sprite):
         self.pygameWindow = pygameWindow
         self.body = body
 
-        # self.import_character_assets()
-        # self.frame_index = 0
-        # self.image = self.animations['idle'][self.frame_index]
-        # self.image =  pygame.image.load()
         self.scale(index)
         self.update((0, 0))
 
@@ -238,35 +259,14 @@ class planetSprite(pygame.sprite.Sprite):
     def scale(self, index):
         # må laste bilde på nytt for å hindre rar effekt som kommer av å skalere bildet gjentatte ganger
         self.image = self.pygameWindow.images[index]
-        # newImgSize = tuple( [z * ((self.body.radius / self.pygameWindow.pixelUnit) / self.height) + self.pygameWindow.radiusAdder for z in self.imgSize])
         newImgSize = tuple([z * (((self.body.radius + self.pygameWindow.radiusAdder) / self.pygameWindow.pixelUnit) /
                                  self.height) for z in self.imgSize])
-        # print(.newImgSize)
         self.image = pygame.transform.scale(self.image, newImgSize)
         self.rect = self.image.get_rect(center=(0, 0))
-
-    # def move(self):
-
-    # def update(self):
-
-    # def get_input(self):
-    #     keys = pygame.key.get_pressed()
-
-    #     if keys[pygame.K_RIGHT]:
-    #         self.direction.x = 1
-    #         self.facing_right = True
-    #     elif keys[pygame.K_LEFT]:
-    #         self.direction.x = -1
-    #         self.facing_right = False
-    #     else:
-    #         self.direction.x = 0
-
-    #     if keys[pygame.K_SPACE] and self.on_ground:
-    #         self.jump()
-    #         self.create_jump_particles(self.rect.midbottom)
 
 
 if __name__ == "__main__":
     import config
+    print("call")
 
     config.main()

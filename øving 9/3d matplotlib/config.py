@@ -5,7 +5,7 @@ from solar_system_3d import SolarSystem, SolarSystemBody
 def main():
     # solar_system = SolarSystem(11 * 1e12, save=False)
     solar_system = SolarSystem(
-        7e12,
+        1.4e13,
         iterPerFrame=1,
         timestepSec=60 * 60 * 24,
         timeUnit="Days",
