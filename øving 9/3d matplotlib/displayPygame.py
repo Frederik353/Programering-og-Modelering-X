@@ -1,4 +1,5 @@
 import sys
+from turtle import position
 import numpy as np
 import pygame
 from support import import_folder
@@ -29,10 +30,12 @@ class displayPygame:
 
         self.solar_system = solar_system
         self.size = displaySizeMeters  # størrelse på universet
-        self.pixelUnit = self.size / self.screen_height
-        # brukt for å zoome inn og ut, ganger størrelsen på universet med to for å gjøre det mulig å se alle planetene fra perspektivet til de ytterste planetene som krever att resten av planetene ikke er lengere unna en halve skjermen, gitt planetene blir fort mindre enn en pixel avhengiga av radius adder
+        # self.pixelUnit = self.size / self.screen_height
+
         self.maxPixelUnit = self.size * 2 / self.screen_height
         self.scale = 1000
+        self.pixelUnit = (self.scale / 1000) * self.maxPixelUnit
+        # brukt for å zoome inn og ut, ganger størrelsen på universet med to for å gjøre det mulig å se alle planetene fra perspektivet til de ytterste planetene som krever att resten av planetene ikke er lengere unna en halve skjermen, gitt planetene blir fort mindre enn en pixel avhengiga av radius adder
         self.offsetHeight = self.pixelUnit * (self.screen_height / 2)
         self.offsetWidth = self.pixelUnit * (self.screen_width / 2)
         self.sprites = []
@@ -45,6 +48,9 @@ class displayPygame:
 
         self.fontSize = 20
         self.font = pygame.font.Font('freesansbold.ttf', self.fontSize)
+        self.smallFontSize = 15
+        self.smallFont = pygame.font.SysFont("calibri", self.smallFontSize)
+
 
     def init_objects(self, body, index):
         body.sprite = planetSprite(self, body, index)
@@ -74,8 +80,10 @@ class displayPygame:
         for body in self.solar_system.bodies:
             for index in range(1, len(body.posarr[0])):
 
-                p1 = ((self.translateX(body.posarr[0][index - 1]) - self.translateX(0)) + self.orbitSizePixels / 2, (self.translateY(body.posarr[1][index - 1]) - self.translateY(0)) + self.orbitSizePixels / 2)
-                p2 = ((self.translateX(body.posarr[0][index]) - self.translateX(0)) + self.orbitSizePixels / 2, (self.translateY(body.posarr[1][index]) - self.translateY(0)) + self.orbitSizePixels / 2)
+                p1 = ((self.translateX(body.posarr[0][index - 1]) - self.translateX(0)) + self.orbitSizePixels / 2,
+                      (self.translateY(body.posarr[1][index - 1]) - self.translateY(0)) + self.orbitSizePixels / 2)
+                p2 = ((self.translateX(body.posarr[0][index]) - self.translateX(0)) + self.orbitSizePixels / 2,
+                      (self.translateY(body.posarr[1][index]) - self.translateY(0)) + self.orbitSizePixels / 2)
 
                 pygame.draw.aaline(self.orbits, body.color, p1, p2)
 
@@ -130,6 +138,31 @@ class displayPygame:
         # nedre grense må kompansere for at skjermposisjonen er definert som øverste venstre hjørne
         self.offsetWidth = max(- unviverseSizeWidth + self.screen_width * self.pixelUnit, min(self.offsetWidth, unviverseSizeWidth))
         self.offsetHeight = max(- unviverseSizeHeight + self.screen_height * self.pixelUnit, min(self.offsetHeight, unviverseSizeHeight))
+
+    def displayInfo(self):
+        info = []
+
+        info.append(
+            f"Time passed: {self.solar_system.framenum * self.solar_system.iterPerFrame} {self.solar_system.timeUnit}")
+        if self.lockOnTo:
+            info.append(f"{self.lockOnTo.name}")
+            info.append(f"Position: {self.lockOnTo.position}")
+            info.append(f"Velocity: {self.lockOnTo.velocity}")
+            info.append(f"Radius: {self.lockOnTo.radius}")
+            info.append(f"Mass: {self.lockOnTo.mass}")
+
+        infoSurface = pygame.Surface(
+            (600, self.smallFontSize * len(info)), pygame.SRCALPHA)
+
+        for i, j in enumerate(info):
+            text = self.smallFont.render(j, True, (255, 255, 255))
+            textRect = text.get_rect(bottomleft=(
+                0, self.smallFontSize + self.smallFontSize * i))
+            infoSurface.blit(text, textRect)
+
+        infoRect = infoSurface.get_rect(bottomleft=(0, self.screen_height))
+        self.screen.blit(infoSurface, infoRect)
+
 
     def lockOn(self):
         self.moveCamera( pos=(self.lockOnTo.position[0], self.lockOnTo.position[1]))
@@ -206,6 +239,7 @@ class displayPygame:
         self.eventChecker()
         self.moveCamera()
         self.updateOrbits()
+        self.displayInfo()
 
         if self.lockOnTo:
             self.lockOn()

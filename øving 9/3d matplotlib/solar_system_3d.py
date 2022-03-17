@@ -76,8 +76,8 @@ class SolarSystem:
     def clock(self):
         self.framenum = 0
         while self.running:
-            self.framenum += 1
             if not self.paused:
+                self.framenum += 1
                 self.update()
             self.pygame.updatePygame(self.framenum)
 
