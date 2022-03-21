@@ -7,7 +7,8 @@ def main():
     solar_system = SolarSystem(
         1.4e13,
         iterPerFrame=1,
-        timestepSec=60 * 60 * 24,
+        timestepSec=60 * 60,
+        timeDivisor=24,
         timeUnit="Days",
         euler=False,
         rk4=False,
@@ -16,7 +17,6 @@ def main():
         save=False,
         saveAs=r"./animation.gif",
     )  # solar system size,
-    # solar_system = SolarSystem(5 * 1e11, save=True)
 
     SolarSystemBody(
         solar_system,

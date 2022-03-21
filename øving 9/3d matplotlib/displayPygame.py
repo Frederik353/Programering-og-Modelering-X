@@ -1,8 +1,11 @@
 import sys
 from turtle import position
+from matplotlib.pyplot import fill
 import numpy as np
 import pygame
 from support import import_folder
+from time import time
+from copy import deepcopy
 
 
 class displayPygame:
@@ -16,11 +19,12 @@ class displayPygame:
         displaySizeMeters,
     ):
         pygame.init()
-        pygame.display.set_caption('Image')
+        pygame.display.set_caption("solar system simulation")
         self.screen_width = 1200
         self.screen_height = 700
-        # self.radiusAdder = 2e10
-        self.radiusAdder = 3e11
+        self.radiusAdder = 1e10
+        # self.radiusAdder = 0
+        # self.radiusAdder = 3e11
 
         self.screen = pygame.display.set_mode(
             (self.screen_width, self.screen_height), pygame.RESIZABLE)
@@ -43,7 +47,8 @@ class displayPygame:
         universeSizeWidth = max(2 * self.size, self.screen_width * self.maxPixelUnit) / self.pixelUnit
         universeSizeHeight = max(2 * self.size, self.screen_height * self.maxPixelUnit) / self.pixelUnit
 
-        self.orbits = pygame.Surface((universeSizeWidth, universeSizeHeight), pygame.SRCALPHA)
+        self.orbits = pygame.Surface(
+            (universeSizeWidth, universeSizeHeight), pygame.SRCALPHA)
         self.orbitSizePixels = abs(self.size / self.pixelUnit)
 
         self.fontSize = 20
@@ -51,14 +56,51 @@ class displayPygame:
         self.smallFontSize = 15
         self.smallFont = pygame.font.SysFont("calibri", self.smallFontSize)
 
+        self.boxToScreenRatio = 7
+        self.topleftBox = (self.translateX(
+            0) - self.orbitSizePixels / 2, self.translateY(0) - self.orbitSizePixels / 2)
+        self.plotOrbits()  # initialiserer variablene som trengs i update funksjonen for blitting
+        self.updateOrbits()
+        self.replotOrbits = False
+        self.lastScroll = 0
 
     def init_objects(self, body, index):
         body.sprite = planetSprite(self, body, index)
         self.sprites.append(body.sprite)
-        body.posarr = [[], []]  # lagrer bare 2d
-        # lagrer en verdi fra start for å hindre bane tegnigen i å krasje
-        body.posarr[0].append(body.position[0])
-        body.posarr[1].append(body.position[1])
+
+    def translateX(self, x): return (x + self.offsetWidth) / self.pixelUnit
+
+    def translateY(self, y): return (y + self.offsetHeight) / self.pixelUnit
+
+    def updatePygame(self, framenum):
+        self.screen.fill((0, 0, 0))
+        self.info = []
+        # self.debugChunks()
+        if not self.replotOrbits:
+            self.updateOrbits()
+        self.eventChecker()
+        self.moveCamera()
+
+        if self.lockOnTo:
+            self.lockOn()
+        elif self.draging:
+            self.dragAndDrop()
+
+        if self.replotOrbits:
+            timeSinceScroll = time() - self.lastScroll
+            self.info.append(f"timeSinceScroll: {timeSinceScroll}")
+            if timeSinceScroll > 1:  # sec
+                self.plotOrbits()
+                self.replotOrbits = False
+
+        for int, body in enumerate(self.solar_system.bodies):
+            x = self.translateX(body.position[0])
+            y = self.translateY(body.position[1])
+            body.sprite.update(((x, y)))
+            self.tag(body, (x, y))
+
+        self.displayInfo()
+        pygame.display.update()
 
     def resizeScreen(self, e):
         old_surface_saved = self.screen
@@ -71,41 +113,172 @@ class displayPygame:
     def pauseSim(self):
         self.solar_system.paused = not self.solar_system.paused
 
+    def get_offsets(self, dist, size):
+
+        # ndim = len(p)
+        ndim = 2
+
+        # generate an (m, ndims) array containing all strings over the alphabet {0, 1, 2}:
+        offset_idx = np.indices((size,) * ndim).reshape(ndim, -1).T
+
+        # use these to index into np.array([-1, 0, 1]) to get offsets
+        offsets = np.arange(-dist, dist + 1, 1, dtype=int).take(offset_idx)
+
+        return offsets
+
+    def debugDot(self, cords):
+        pygame.draw.rect(self.screen, (255, 0, 0),
+                         (cords[0] - 5, cords[1] - 5, 10, 10))
+
+    def get_center_box(self):
+        if self.screen_width > self.boxCount[0] * self.boxSize[0]:
+            xval = [max(0, (self.topleftBox[0] + self.boxSize[0] *
+                            self.boxCount[0]) - self.screen_width), min(0, self.topleftBox[0])]
+        else:
+            xval = [self.translateX(0) - self.screen_width / 2]
+        if self.screen_height > self.boxCount[1] * self.boxSize[1]:
+            yval = [max(0, (self.topleftBox[1] + self.boxSize[1] * self.boxCount[1]
+                            ) - self.screen_height), min(0, self.topleftBox[1])]
+        else:
+            yval = [self.translateY(0) - self.screen_height / 2]
+
+        # corners = (max(xval, key=lambda x: abs(x)), max(yval, key=lambda x: abs(x)))
+        corners = (sum(xval), sum(yval))
+
+        self.centerCoordinates = ((self.translateX(0) - self.topleftBox[0] - corners[0]) / self.boxSize[0], (
+            self.translateY(0) - self.topleftBox[1] - corners[1]) / self.boxSize[1])
+
+        if (self.boxToScreenRatio % 2) == 0:
+            centerBox = (int(np.floor(self.centerCoordinates[0]))), int(
+                np.floor(self.centerCoordinates[1]))
+        else:
+            centerBox = (int(np.round(self.centerCoordinates[0])), int(
+                np.round(self.centerCoordinates[1])))
+
+        return centerBox
+
     def plotOrbits(self):
-
         self.orbitSizePixels = abs(self.size / self.pixelUnit)
-        self.orbits = pygame.Surface((self.orbitSizePixels, self.orbitSizePixels), pygame.SRCALPHA)
 
+        totalSize = (min(self.screen_width, self.orbitSizePixels),
+                     min(self.screen_height, self.orbitSizePixels))
+        self.boxCount = (int(np.floor(self.orbitSizePixels / (totalSize[0] / self.boxToScreenRatio))), int(
+            np.floor(self.orbitSizePixels / (totalSize[1] / self.boxToScreenRatio))))
+        self.boxSize = (int(self.orbitSizePixels /
+                            self.boxCount[0]), int(self.orbitSizePixels / self.boxCount[1]))
+
+        self.orbits = []
+        self.orbitRects = []
+
+        # color = list(np.random.choice(range(256), size=3))
+        # color = [(0, 255, 0), (0, 0, 255)]
+
+        for x in range(self.boxCount[0]):
+            self.orbits.append([])
+            self.orbitRects.append([])
+            # color = list(reversed(color))
+            for y in range(self.boxCount[1]):
+                self.orbits[x].append(pygame.Surface(
+                    self.boxSize, pygame.SRCALPHA))
+                # self.orbits[x][y].fill(color[(y) % 2])
+
+                # point = (self.topleftBox[0] + x * self.boxSize[0], self.topleftBox[1] + y * self.boxSize[1])
+                # self.orbitRects[x].append(self.orbits[x][y].get_rect(topleft=point))
+                # oppdaterer posisjon senere om nødvendig
+                self.orbitRects[x].append(None)
+
+        if (self.boxToScreenRatio % 2) == 0:
+            dist = self.boxToScreenRatio/2
+        else:
+            dist = int(np.ceil(self.boxToScreenRatio/2))
+
+        size = self.boxToScreenRatio + 1
+
+        self.boxOffsets = self.get_offsets(dist, size)
 
         for body in self.solar_system.bodies:
             for index in range(1, len(body.posarr[0])):
 
+                # vektor fra univers hjørne til senter til punkt
                 p1 = ((self.translateX(body.posarr[0][index - 1]) - self.translateX(0)) + self.orbitSizePixels / 2,
                       (self.translateY(body.posarr[1][index - 1]) - self.translateY(0)) + self.orbitSizePixels / 2)
                 p2 = ((self.translateX(body.posarr[0][index]) - self.translateX(0)) + self.orbitSizePixels / 2,
                       (self.translateY(body.posarr[1][index]) - self.translateY(0)) + self.orbitSizePixels / 2)
 
-                pygame.draw.aaline(self.orbits, body.color, p1, p2)
-
-        rect = self.orbits.get_rect(
-            center=(self.translateX(0), self.translateY(0)))
-        self.screen.blit(self.orbits, rect)
+                p1box = (p1[0] % self.boxSize[0], p1[1] % self.boxSize[1])
+                p2box = (-(np.floor(p1[0] / self.boxSize[0]) - np.floor(p2[0] / self.boxSize[0])) * self.boxSize[0] + p2[0] % self.boxSize[0],
+                         -(np.floor(p1[1] / self.boxSize[1]) - np.floor(p2[1] / self.boxSize[1])) * self.boxSize[1] + p2[1] % self.boxSize[1])
+                pygame.draw.aaline(self.orbits[int(np.floor(p1[0] / self.boxSize[0]))][int(
+                    np.floor(p1[1] / self.boxSize[1]))], body.color, p1box, p2box)
 
     def updateOrbits(self):
 
         for body in self.solar_system.bodies:
-            body.posarr[0].append(body.position[0])
-            body.posarr[1].append(body.position[1])
-
             p1 = ((self.translateX(body.posarr[0][-2]) - self.translateX(0)) + self.orbitSizePixels / 2,
                   (self.translateY(body.posarr[1][-2]) - self.translateY(0)) + self.orbitSizePixels / 2)
             p2 = ((self.translateX(body.posarr[0][-1]) - self.translateX(0)) + self.orbitSizePixels / 2,
                   (self.translateY(body.posarr[1][-1]) - self.translateY(0)) + self.orbitSizePixels / 2)
 
-            pygame.draw.aaline(self.orbits, body.color, p1, p2)
+            # koordinater relativ til boks
+            p1box = (p1[0] % self.boxSize[0], p1[1] % self.boxSize[1])
+            p2box = (-(np.floor(p1[0] / self.boxSize[0]) - np.floor(p2[0] / self.boxSize[0])) * self.boxSize[0] + p2[0] % self.boxSize[0], -(
+                np.floor(p1[1] / self.boxSize[1]) - np.floor(p2[1] / self.boxSize[1])) * self.boxSize[1] + p2[1] % self.boxSize[1])
 
-        rect = self.orbits.get_rect(center=(self.translateX(0), self.translateY(0)))
-        self.screen.blit(self.orbits, rect)
+            pygame.draw.aaline(self.orbits[int(np.floor(p1[0] / self.boxSize[0]))][int(
+                np.floor(p1[1] / self.boxSize[1]))], body.color, p1box, p2box)
+
+        self.topleftBox = (self.translateX(
+            0) - self.orbitSizePixels / 2, self.translateY(0) - self.orbitSizePixels / 2)
+
+        self.centerBox = self.get_center_box()
+
+        p = self.centerBox
+        neighbours = p + self.boxOffsets  # apply offsets to p
+
+        # remove squares outside universe box
+        neighbours = neighbours[np.all(neighbours < self.boxCount, axis=1)]
+        neighbours = neighbours[np.all(neighbours > (-1, -1), axis=1)]
+
+        for pos in neighbours:
+            # oppdaterer kun de nødvendige rect ene
+            point = (self.topleftBox[0] + pos[0] * self.boxSize[0],
+                     self.topleftBox[1] + pos[1] * self.boxSize[1])
+            self.orbitRects[pos[0]][pos[1]] = self.orbits[pos[0]
+                                                          ][pos[1]].get_rect(topleft=point)
+
+            # blitter boxene som vil vises på skjermen
+            self.screen.blit(
+                self.orbits[pos[0]][pos[1]], self.orbitRects[pos[0]][pos[1]])
+
+    def debugChunks(self):
+        # color = list(np.random.choice(range(256), size=3))
+
+        # debug square
+        universe = pygame.Surface(
+            (self.orbitSizePixels, self.orbitSizePixels), pygame.SRCALPHA)
+        universe.fill((0, 255, 255, 100))
+        universeRect = universe.get_rect(
+            center=(self.translateX(0), self.translateY(0)))
+        self.screen.blit(universe, universeRect)
+
+        # debug dot
+        p = (self.topleftBox[0] + self.centerCoordinates[0] * self.boxSize[0],
+             self.topleftBox[1] + self.centerCoordinates[1] * self.boxSize[1])
+        self.debugDot(p)
+        self.info.append(f"{p}")
+
+        color = [(0, 255, 0), (0, 0, 255)]
+
+        for x in range(self.boxCount[0]):
+            color = list(reversed(color))
+            for y in range(self.boxCount[1]):
+                self.orbits[x][y].fill(color[(y) % 2])
+
+        # print debug square
+        # x = np.zeros((self.boxCount[1], self.boxCount[0]), int)
+        # x[tuple(neighbours.T)] = 1
+        # print(x)
+        # print("----------------------------------------------------")
 
     def moveCamera(self, centerCoordinate=True, pos=None):
         keys = pygame.key.get_pressed()  # checking pressed keys
@@ -132,29 +305,38 @@ class displayPygame:
 
         # begrenser mengden det går ann å bevege seg i alle retningene
         # hvis skjermen viser ett omeråde større enn universet
-        unviverseSizeWidth = max( 2 * self.size, self.screen_width * self.maxPixelUnit)
-        unviverseSizeHeight = max( 2 * self.size, self.screen_height * self.maxPixelUnit)
+        unviverseSizeWidth = max(
+            2 * self.size, self.screen_width * self.maxPixelUnit)
+        unviverseSizeHeight = max(
+            2 * self.size, self.screen_height * self.maxPixelUnit)
 
         # nedre grense må kompansere for at skjermposisjonen er definert som øverste venstre hjørne
-        self.offsetWidth = max(- unviverseSizeWidth + self.screen_width * self.pixelUnit, min(self.offsetWidth, unviverseSizeWidth))
-        self.offsetHeight = max(- unviverseSizeHeight + self.screen_height * self.pixelUnit, min(self.offsetHeight, unviverseSizeHeight))
+        self.offsetWidth = max(- unviverseSizeWidth + self.screen_width *
+                               self.pixelUnit, min(self.offsetWidth, unviverseSizeWidth))
+        self.offsetHeight = max(- unviverseSizeHeight + self.screen_height *
+                                self.pixelUnit, min(self.offsetHeight, unviverseSizeHeight))
 
     def displayInfo(self):
-        info = []
 
-        info.append(
-            f"Time passed: {self.solar_system.framenum * self.solar_system.iterPerFrame} {self.solar_system.timeUnit}")
+        self.info.append(
+            f"Time passed: {np.round((self.solar_system.framenum * self.solar_system.iterPerFrame) / self.solar_system.timeDivisor, 1)} {self.solar_system.timeUnit}")
+        self.info.append(f"box count: {self.boxCount}")
+        self.info.append(
+            f"memory surface array: { np.round(sys.getsizeof(self.orbits)/(1024), 2)} KB")
+        self.info.append(
+            f"memory rect array: {np.round(sys.getsizeof(self.orbitRects)/(1024), 2)} KB")
+
         if self.lockOnTo:
-            info.append(f"{self.lockOnTo.name}")
-            info.append(f"Position: {self.lockOnTo.position}")
-            info.append(f"Velocity: {self.lockOnTo.velocity}")
-            info.append(f"Radius: {self.lockOnTo.radius}")
-            info.append(f"Mass: {self.lockOnTo.mass}")
+            self.info.append(f"{self.lockOnTo.name}")
+            self.info.append(f"Position: {self.lockOnTo.position}")
+            self.info.append(f"Velocity: {self.lockOnTo.velocity}")
+            self.info.append(f"Radius: {self.lockOnTo.radius}")
+            self.info.append(f"Mass: {self.lockOnTo.mass}")
 
         infoSurface = pygame.Surface(
-            (600, self.smallFontSize * len(info)), pygame.SRCALPHA)
+            (600, self.smallFontSize * len(self.info)), pygame.SRCALPHA)
 
-        for i, j in enumerate(info):
+        for i, j in enumerate(self.info):
             text = self.smallFont.render(j, True, (255, 255, 255))
             textRect = text.get_rect(bottomleft=(
                 0, self.smallFontSize + self.smallFontSize * i))
@@ -163,9 +345,9 @@ class displayPygame:
         infoRect = infoSurface.get_rect(bottomleft=(0, self.screen_height))
         self.screen.blit(infoSurface, infoRect)
 
-
     def lockOn(self):
-        self.moveCamera( pos=(self.lockOnTo.position[0], self.lockOnTo.position[1]))
+        self.moveCamera(
+            pos=(self.lockOnTo.position[0], self.lockOnTo.position[1]))
 
     def dragAndDrop(self):
         x, y = pygame.mouse.get_pos()
@@ -190,7 +372,8 @@ class displayPygame:
         text = self.font.render(body.name, True, (255, 255, 255))
         textRect = text.get_rect(bottomleft=point)
         pygame.draw.aaline(tag, body.color, (0, 30), (10, self.fontSize))
-        pygame.draw.aaline(tag, body.color, (10, self.fontSize), (textRect[2] + 10, self.fontSize))
+        pygame.draw.aaline(tag, body.color, (10, self.fontSize),
+                           (textRect[2] + 10, self.fontSize))
         tag.blit(text, (10, 0))
 
         tagrect = tag.get_rect(bottomleft=point)
@@ -221,7 +404,7 @@ class displayPygame:
                 if e.button == 3:
                     self.lockOnTo = None
                 if e.button == 4:
-                    self.zoom(max(self.scale - 15, 1))
+                    self.zoom(max(self.scale - 15, 5))
                 if e.button == 5:
                     self.zoom(min(self.scale + 15, 1000))
             elif e.type == pygame.MOUSEBUTTONUP:
@@ -229,31 +412,6 @@ class displayPygame:
                     self.draging = False
             elif e.type == pygame.VIDEORESIZE:
                 self.resizeScreen(e)
-
-    def translateX(self, x): return (x + self.offsetWidth) / self.pixelUnit
-
-    def translateY(self, y): return (y + self.offsetHeight) / self.pixelUnit
-
-    def updatePygame(self, framenum):
-        self.screen.fill((0, 0, 0))
-        self.eventChecker()
-        self.moveCamera()
-        self.updateOrbits()
-        self.displayInfo()
-
-        if self.lockOnTo:
-            self.lockOn()
-        elif self.draging:
-            self.dragAndDrop()
-
-        for int, body in enumerate(self.solar_system.bodies):
-            x = self.translateX(body.position[0])
-            y = self.translateY(body.position[1])
-            body.sprite.update(((x, y)))
-            self.tag(body, (x, y))
-
-        pygame.display.update()
-        # self.clock.tick(60)
 
     def zoom(self, scale):
         prevPixelUnit = self.pixelUnit
@@ -271,7 +429,8 @@ class displayPygame:
         y = self.offsetHeight + (y * self.pixelUnit - y * prevPixelUnit)
 
         self.moveCamera(centerCoordinate=False, pos=(x, y))
-        self.plotOrbits()
+        self.replotOrbits = True
+        self.lastScroll = time()
 
 
 class planetSprite(pygame.sprite.Sprite):
@@ -301,6 +460,4 @@ class planetSprite(pygame.sprite.Sprite):
 
 if __name__ == "__main__":
     import config
-    print("call")
-
     config.main()
