@@ -1,6 +1,5 @@
 
 import numpy as np
-
 class Vector:
     def __init__(self, axis):
         self.vec = np.array(axis)

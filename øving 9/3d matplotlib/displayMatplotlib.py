@@ -109,7 +109,7 @@ class displayMatplotlib:
         body.text = []
 
         # trenger en posisjonsarray for å se banene og trenger en per plot på grunn av offsett gjort for å få jorden i sentrum
-        body.posarr = [[[], [], []], [[], [], []], [[], [], []]]
+        body.mplPosarr = [[[], [], []], [[], [], []], [[], [], []]]
 
         foo = 2 * 1e8
         for plot, axis in enumerate(plot.ax):
@@ -162,7 +162,7 @@ class displayMatplotlib:
         writer = animation.FFMpegWriter(fps=60, bitrate=18_000)
         self.ani.save(f)
 
-    def updatePosArray(self, body, index):
+    def updatemplPosarray(self, body, index):
         for i, axis in enumerate(self.ax):
             if index in self.renderFilter[i]:
                 if self.focus[i] != None:  # hvis fokus på spesefikk planet
@@ -191,9 +191,9 @@ class displayMatplotlib:
                 else:
                     position = body.position
 
-                body.posarr[i][0].append(position[0])
-                body.posarr[i][1].append(position[1])
-                body.posarr[i][2].append(position[2])
+                body.mplPosarr[i][0].append(position[0])
+                body.mplPosarr[i][1].append(position[1])
+                body.mplPosarr[i][2].append(position[2])
 
 
 
@@ -205,11 +205,13 @@ class displayMatplotlib:
         self.sim_time_label.set_text(f"{self.solar_system.timeUnit}: {framenum}")
 
         for int, body in enumerate(self.solar_system.bodies):
-            self.updatePosArray(body, int) # brukes til å lage banen men opdateres bare per frame ikke per utregning
+            # brukes til å lage banen men opdateres bare per frame ikke per utregning
+            self.updatemplPosarray(body, int)
             for plot, axis in enumerate(self.ax):
 
                 if int in self.renderFilter[plot]:
-                    position= [body.posarr[plot][0][-1], body.posarr[plot][1][-1],body.posarr[plot][2][-1]]
+                    position = [body.mplPosarr[plot][0][-1],
+                                body.mplPosarr[plot][1][-1], body.mplPosarr[plot][2][-1]]
 
                     # blitting i 3d plot ser ikke ut til å være støttet av matplotlib så må fjerne det forige kule meshet og plotte det på nytt som skader ytelsen
                     axis.collections.remove(body.sphere[plot])
@@ -250,9 +252,9 @@ class displayMatplotlib:
                     # ploter banen planeten har dratt siden starten av simulasjonen
                     body.trace[plot][0].set(
                         data_3d=(
-                            body.posarr[plot][0],
-                            body.posarr[plot][1],
-                            body.posarr[plot][2],
+                            body.mplPosarr[plot][0],
+                            body.mplPosarr[plot][1],
+                            body.mplPosarr[plot][2],
                         ),
                         color=body.color,
                     )

@@ -3,6 +3,7 @@ import numpy as np
 from vectors import Vector
 from displayMatplotlib import displayMatplotlib
 from displayPygame import displayPygame
+from rk4 import RK4_integrator
 
 
 class SolarSystem:
@@ -14,6 +15,7 @@ class SolarSystem:
         displaySizeMeters,
         iterPerFrame=10,
         timestepSec=8.64e4,
+        timeDivisor=1,
         timeUnit="Days",
         euler=False,
         rk4=False,
@@ -34,11 +36,11 @@ class SolarSystem:
         self.displayWithPygame = displayWithPygame  # vis animasjon med pygame
         self.save = save  # lagre som gif
         self.saveAs = saveAs
-        self.iterator = (
-            0  # siden matplotlib bruker en egen iterator for å kjøre funksjonene sine
-        )
+        # siden matplotlib bruker en egen iterator for å kjøre funksjonene sine)
+        self.iterator = 0
         self.timestepSec = timestepSec
         self.timeUnit = timeUnit
+        self.timeDivisor = timeDivisor
 
         self.bodies = []
 
@@ -54,6 +56,8 @@ class SolarSystem:
                 self,
                 self.size,
             )
+        if self.rk4:
+            self.rk4 = RK4_integrator(self.timestepSec, self.bodies)
 
     def add_body(self, body):
         self.bodies.append(body)
@@ -68,13 +72,13 @@ class SolarSystem:
             body.move(int)
 
     def run(self):
+        self.framenum = 0
         if self.displayWithMatplotlib:
             self.plot.run()
         elif self.displayWithPygame:
             self.clock()
 
     def clock(self):
-        self.framenum = 0
         while self.running:
             if not self.paused:
                 self.framenum += 1
@@ -82,8 +86,19 @@ class SolarSystem:
             self.pygame.updatePygame(self.framenum)
 
     def update(self):
-        for i in range(self.iterPerFrame):
-            self.calculate_all_body_interactions()
+        if self.rk4:
+            for i in range(self.iterPerFrame):
+                self.calculate_all_body_interactions()
+                self.rk4.compute_gravity_step()
+                for body in self.bodies:
+                    body.posarr[0].append(body.position[0])
+                    body.posarr[1].append(body.position[1])
+        else:
+            for i in range(self.iterPerFrame):
+                self.calculate_all_body_interactions()
+                for body in self.bodies:
+                    body.posarr[0].append(body.position[0])
+                    body.posarr[1].append(body.position[1])
 
 
 class SolarSystemBody:
@@ -118,6 +133,10 @@ class SolarSystemBody:
             displayPygame.init_objects(
                 self.solar_system.pygame, self, len(self.solar_system.bodies)
             )
+        self.posarr = [[], [], []]
+        # lagrer en verdi fra start for å hindre bane tegnigen i å krasje
+        self.posarr[0].append(self.position[0])
+        self.posarr[1].append(self.position[1])
 
         # legger til seg selv i solsytemet
         self.solar_system.add_body(self)
@@ -133,26 +152,22 @@ class SolarSystemBody:
         # finner akselerasjon mellom to legemer
         # viktig å huske at mange av variablene brukt her er instanser av vektor klassen jeg laget med såkalte magic operatorer som vil si at variablene egentlig er arrayer og f.eks + vil gi vektor summen i stedet for den vanlige summen mellom to tall
 
-        distance = Vector(other.position) - Vector(
-            self.position
-        )  # få en vektor som peker fra det ene til det andre legemet siden dette vil retningen akselerasjonen virker i
+        # få en vektor som peker fra det ene til det andre legemet siden dette vil retningen akselerasjonen virker i
+        distance = Vector(other.position) - Vector(self.position)
         distance_mag = distance.get_magnitude()
 
         G = 6.67408e-11  # m**3 kg**-1 s**-2,  gravitasjonskonstanten
 
-        force_mag = G * (
-            self.mass * other.mass / (distance_mag**2)
-        )  # finner magnituden på kraftvektoren mellom legemene
-        force = (
-            distance.normalize() * force_mag
-        )  # normaliserer vektorene for å få en retningsvektor med lengde 1 og ganger dette med keaftvektor lengden for å få kraftvektoren
+        # finner magnituden på kraftvektoren mellom legemene
+        force_mag = G * (self.mass * other.mass / (distance_mag**2))
+        # normaliserer vektorene for å få en retningsvektor med lengde 1 og ganger dette med keaftvektor lengden for å få kraftvektoren
+        force = (distance.normalize() * force_mag)
 
         reverse = 1
         for body in self, other:
             acceleration = force / body.mass  # finner akselerasjon ved formel
-            body.velocity += acceleration * (
-                reverse * self.timestepSec
-            )  # extrapolerer akselerasjon til en dag og gjør legger til på farten samt reverserer akselerasjonen for det andre legemet
+            # extrapolerer akselerasjon til en dag og gjør legger til på farten samt reverserer akselerasjonen for det andre legemet
+            body.velocity += acceleration * (reverse * self.timestepSec)
             reverse = -1
 
 
