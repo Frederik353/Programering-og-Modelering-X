@@ -19,7 +19,7 @@ class SolarSystem:
         timeUnit="Days",
         euler=False,
         rk4=False,
-        displayWithMatplotlib=False,
+        displayWithMatplotlib=True,
         displayWithPygame=False,
         save=False,
         saveAs=r"./animation.gif",

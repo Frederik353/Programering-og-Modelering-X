@@ -20,7 +20,11 @@ y = f(x)
 X = np.linspace(a, b, n*N+1)
 Y = f(X)
 
-plt.figure(figsize=(15, 10))
+plt.style.use("dark_background")
+plt.rcParams['font.size'] = 8
+plt.figure(figsize=(13, 9))
+
+
 
 # finner integral å teste opp mot
 area = integrate.quad(f, a, b)
