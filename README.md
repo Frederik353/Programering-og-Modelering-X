@@ -23,6 +23,7 @@
 ## Conways Game of Life
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/standard.gif)
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/glider%20loop%20p64.gif)
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/8k.mp4)
 
 higly paralell running on gpu 
 4k by 4k takes 0.025992393493652344 per iteration
