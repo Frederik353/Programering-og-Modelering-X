@@ -1,11 +1,11 @@
-from matplotlib import pyplot as plt
-from matplotlib import animation
-import numpy as np
 import time
 
+import numpy as np
+from matplotlib import animation
+from matplotlib import pyplot as plt
 
 # Initial values
-position = 15
+position = 13
 velocity = 0
 acceleration = 0
 sim_time = 0
@@ -19,9 +19,13 @@ b = 0.1  # damping coefficient
 
 
 class GraphPlot():
+
     def __init__(self, label, color):
-        self.first_patch = plt.Polygon(
-            [[10, 10]], closed=None, fill=None, edgecolor=color, label=label)
+        self.first_patch = plt.Polygon([[10, 10]],
+                                       closed=None,
+                                       fill=None,
+                                       edgecolor=color,
+                                       label=label)
 
     def init_func(self):
         self.first_patch.xy = [[0, 0]]
@@ -49,7 +53,7 @@ def animate(i):
     X = np.linspace(x, 20, 1000)
     sinX = np.linspace(4 * np.pi, 6 * np.pi, 100)
     X3 = np.tile(sinX, 10)
-    Y = 5*np.sin(X3)
+    Y = 5 * np.sin(X3)
     spring.set_data(X[:1000], Y[:1000])
 
     box.xy = (x - 5, -1.25)
@@ -61,8 +65,8 @@ def animate(i):
     pos_plot = plots[1].update([[sim_time, x], [sim_time, 0]])
     vel_plot = plots[2].update([[sim_time, v], [sim_time, 0]])
     acc_plot = plots[3].update([[sim_time, a], [sim_time, 0]])
-    ret_ = [box, sim_time_label, spring, acceleration_arrow,
-            velocity_arrow] + acc_plot + vel_plot + pos_plot
+    ret_ = [box, sim_time_label, spring, acceleration_arrow, velocity_arrow
+            ] + acc_plot + vel_plot + pos_plot
 
     return ret_
 
@@ -79,7 +83,9 @@ def init_func():
     return ret_
 
 
-def init_plots(plotx, ploty, xmin, xmax, ymin, ymax, xlabel, ylabel, title, color):
+def init_plots(plotx, ploty, xmin, xmax, ymin, ymax, xlabel, ylabel, title,
+               color):
+
     ax[plotx, ploty].set_xlim((xmin, xmax))
     ax[plotx, ploty].set_ylim((ymin, ymax))
     plots.append(GraphPlot(title, color))
@@ -103,7 +109,7 @@ def set(args):
     spring_force = k * position  # Fs = k * x
     damper_force = b * velocity  # Fb = b * x'
 
-    acceleration = - (spring_force + damper_force) / mass
+    acceleration = -(spring_force + damper_force) / mass
     velocity += (acceleration * dt)  # Integral(a) = v
     position += (velocity * dt)  # Integral(v) = x
 
@@ -117,31 +123,44 @@ if __name__ == "__main__":
     plots = [0]
 
     # plotx, ploty, xmin,xmax,ymin,ymax,xlabel, ylabel, title, color
-    init_plots(0, 0, 0, simulation_time, -20, 20,
-               "Time: (s)", "Position", "Position Plot", "g")
+    init_plots(0, 0, 0, simulation_time, -20, 20, "Time: (s)", "Position",
+               "Position Plot", "g")
 
-    init_plots(0, 1, 0, simulation_time, -20, 20,
-               "Time: (s)", "Velocity ", "Velocity Plot", "b")
+    init_plots(0, 1, 0, simulation_time, -20, 20, "Time: (s)", "Velocity ",
+               "Velocity Plot", "b")
 
-    init_plots(1, 0, 0, simulation_time, -30, 30, "Time: (s)",
-               "Acceleration", "Acceleration Plot", "r")
+    init_plots(1, 0, 0, simulation_time, -30, 30, "Time: (s)", "Acceleration",
+               "Acceleration Plot", "r")
 
     sim_time_label = ax[1, 1].text(0.03, 0.9, '', transform=ax[1, 1].transAxes)
-    acceleration_arrow = ax[1, 1].annotate(
-        "", xy=(10000, 0), xytext=(0, 0), arrowprops={"facecolor": "r"})
-    velocity_arrow = ax[1, 1].annotate(
-        "", xy=(1000000, 0), xytext=(0, 0), arrowprops={"facecolor": "b"})
+    acceleration_arrow = ax[1, 1].annotate("",
+                                           xy=(10000, 0),
+                                           xytext=(0, 0),
+                                           arrowprops={"facecolor": "r"})
+    velocity_arrow = ax[1, 1].annotate("",
+                                       xy=(1000000, 0),
+                                       xytext=(0, 0),
+                                       arrowprops={"facecolor": "b"})
 
     X = np.linspace(position, 20, 1000)
-    Y = 2.5*np.sin(position*X-position)
+    Y = 2.5 * np.sin(position * X - position)
 
     spring, = plt.plot([0], [0], color="grey")
     box = plt.Rectangle((0, -1.25), width=10, height=2.5, fc='tab:blue')
     start_time = time.time()
     time_interval = start_time
-    init_plots(1, 1, -20, 20, -20, 20, "Y position",
-               "X position", "Animation", None)
+    init_plots(1, 1, -20, 20, -20, 20, "Y position", "X position", "Animation",
+               None)
     print(plots)
-    animate = animation.FuncAnimation(
-        fig, animate, interval=0.1, frames=30*60, blit=True, repeat=True, init_func=init_func)
+    animate = animation.FuncAnimation(fig,
+                                      animate,
+                                      interval=1,
+                                      save_count=1_00,
+                                      frames=1_000,
+                                      blit=True,
+                                      repeat=True,
+                                      init_func=init_func)
+
+    animate.save("./spring_animation.gif")
+
     plt.show()

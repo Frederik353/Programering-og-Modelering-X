@@ -1,12 +1,9 @@
 import sim.engine as engine
 
-
-
 config = ["masseskudd", "åpningsskudd", "veggskudd"]
 current_config = config[0]
 continuize = True
 continuize_tidstep = 0.01
-
 
 if __name__ == '__main__':
     sim = engine.SkuddSimulasjon()
