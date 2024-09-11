@@ -1,11 +1,13 @@
-from matplotlib import pyplot as plt
-from matplotlib import animation
-import numpy as np
-import time
 import random
+import time
+
+import numpy as np
+from matplotlib import animation
+from matplotlib import pyplot as plt
 
 
 class System:
+
     def __init__(self, p, v, a, rho, tau, boundry, t=[0, 0, 0], radius=1):
         # Initial values
         self.p = p
@@ -13,20 +15,23 @@ class System:
         self.a = a
         self.t = t
         self.freefall = [True, True, True]  # state: freefall or in contact
-        self.rho = rho     # coefficient of restitution
-        self.tau = tau     # contact time for bounce (s)
+        self.rho = rho  # coefficient of restitution
+        self.tau = tau  # contact time for bounce (s)
         self.vmax = [0, 0, 0]
         self.v_imp = [0, 0, 0]
         self.t_hit = [0, 0, 0]  # time of last impact
         self.t_bounce = [0, 0, 0]  # time of next bounce
 
-        self.time_data, self.pos_data, self.vel_data = [[t[0]], [t[1]], [t[2]]], [
-            [p[0]], [p[1]], [p[2]]], [[v[0]], [v[1]], [v[2]]]
+        self.time_data, self.pos_data, self.vel_data = [[t[0]], [t[1]], [t[2]]
+                                                        ], [[p[0]], [p[1]],
+                                                            [p[2]]], [[v[0]],
+                                                                      [v[1]],
+                                                                      [v[2]]]
         self.radius = radius  # radius of ball
         self.compression = [0, 0, 0]
         self.boundry = boundry  # boundrys of ball
 
-        self.m1, self.m2 = np.mgrid[0:2*np.pi:20j, 0:np.pi:10j]
+        self.m1, self.m2 = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
 
     def update(self):
         global time_interval
@@ -35,14 +40,16 @@ class System:
 
         for i, p in enumerate(self.p):
 
-            hnew = p + self.v[i]*dt + (1/2)*self.a[i]*dt**2
-            if(self.freefall[i]):
-                if(hnew < self.boundry[i][0] or hnew > self.boundry[i][1]):  # has impacted
+            hnew = p + self.v[i] * dt + (1 / 2) * self.a[i] * dt**2
+            if (self.freefall[i]):
+                if (hnew < self.boundry[i][0]
+                        or hnew > self.boundry[i][1]):  # has impacted
                     self.t_hit[i] = (-self.p[i] + hnew +
-                                     self.t[i]*self.v[i])/self.v[i]
+                                     self.t[i] * self.v[i]) / self.v[i]
 
-                    self.vmax[i] = -(self.v[i] - self.a[i] *
-                                     (self.t_hit[i] - self.time_data[i][-1])) * self.rho
+                    self.vmax[i] = -(
+                        self.v[i] - self.a[i] *
+                        (self.t_hit[i] - self.time_data[i][-1])) * self.rho
                     # print(self.vmax[i]/0.75, i)
 
                     if hnew < self.boundry[i][0]:
@@ -71,7 +78,8 @@ class System:
                     self.p[i] = hnew
                     self.pos_data[i].append(hnew)
             else:
-                if (self.t[i] + dt) >= self.t_bounce[i]:  # if should have bounced
+                if (self.t[i] +
+                        dt) >= self.t_bounce[i]:  # if should have bounced
                     self.time_data[i].append(self.t_bounce[i])
                     self.v[i] = self.vmax[i]
                     self.vel_data[i].append(self.v[i])
@@ -80,7 +88,7 @@ class System:
                     self.time_data[i].append(self.t[i])
                     self.p[i] = hnew
                     self.pos_data[i].append(hnew)
-                    self.v[i] += self.a[i]*dt
+                    self.v[i] += self.a[i] * dt
                     self.vel_data[i].append(self.v[i])
                     self.freefall[i] = True
                 else:  # if still in bounce procces
@@ -102,22 +110,31 @@ def animate(i):
     ax[2].view_init(30, angle)
 
     ball.update()
-
     if sphere:
-        ax[2].collections.remove(sphere)
+        sphere.remove()
+    # if sphere:
+    # ax[2].collections.remove(sphere)
     # if trajectory:
-        # ax[2].collections.remove(trajectory)
+    # ax[2].collections.remove(trajectory)
 
     # parameter fremsitilling av en kule
-    x = ball.p[0] + ball.radius * np.cos(ball.m1)*np.sin(ball.m2)
-    y = ball.p[1] + ball.radius * np.sin(ball.m1)*np.sin(ball.m2)
+    x = ball.p[0] + ball.radius * np.cos(ball.m1) * np.sin(ball.m2)
+    y = ball.p[1] + ball.radius * np.sin(ball.m1) * np.sin(ball.m2)
     z = ball.p[2] + ball.radius * np.cos(ball.m2)
-    sphere = ax[2].plot_wireframe(
-        x, y, z,  rstride=1, cstride=1, color='b', linewidth=0.25)
+    sphere = ax[2].plot_wireframe(x,
+                                  y,
+                                  z,
+                                  rstride=1,
+                                  cstride=1,
+                                  color='b',
+                                  linewidth=0.25)
     # trajectory = ax[2].plot3D( ball.pos_data[0], ball.pos_data[1], ball.pos_data[2])
 
-    vel_vector.set_segments([[[ball.p[0], ball.p[1], ball.p[2]], [
-                            ball.p[0] + ball.v[0], ball.p[1] + ball.v[1], ball.p[2] + ball.v[2]]]])
+    vel_vector.set_segments([[[ball.p[0], ball.p[1], ball.p[2]],
+                              [
+                                  ball.p[0] + ball.v[0], ball.p[1] + ball.v[1],
+                                  ball.p[2] + ball.v[2]
+                              ]]])
 
     for i, p in enumerate(ball.p):
         pos_plot[i].set_data(ball.time_data[i], ball.pos_data[i])
@@ -146,8 +163,8 @@ def init_plots(plot, xmin, xmax, ymin, ymax, xlabel, ylabel, title, color):
 
 if __name__ == "__main__":
 
-    # g = -9.81
-    g = -1.625
+    g = -9.81
+    # g = -1.625
     boundry = [[-20, 20], [-20, 20], [0, 40]]
     simulation_time = 30.0
     plot_border = 1.1
@@ -177,8 +194,10 @@ if __name__ == "__main__":
     plt.subplots_adjust(hspace=0.3)
 
     # plotx, ploty, xmin,xmax,ymin,ymax,xlabel, ylabel, title, color
-    init_plots(0, 0, simulation_time, np.min(boundry) * plot_border,
-               np.max(boundry)*plot_border, "Time: (s)", "Position", "Position Plot", "g")
+    init_plots(0, 0, simulation_time,
+               np.min(boundry) * plot_border,
+               np.max(boundry) * plot_border, "Time: (s)", "Position",
+               "Position Plot", "g")
 
     foo = []
     for i, v in enumerate(ball.v):
@@ -190,11 +209,11 @@ if __name__ == "__main__":
             # if first hit upper bound
             if (v**2 / (2 * a)) + p > boundry[i][1]:
                 delta_s = boundry[i][1] - p
-                foo.append(np.sqrt(v**2+abs(2*a * delta_s)))
+                foo.append(np.sqrt(v**2 + abs(2 * a * delta_s)))
             else:
                 delta_s = p - boundry[i][0]
                 # print(v, a, delta_s)
-                foo.append(-np.sqrt(v**2+abs(2*a * delta_s)))
+                foo.append(-np.sqrt(v**2 + abs(2 * a * delta_s)))
         else:
             if v > 0:  # if first hit upper bound
                 delta_s = abs(boundry[i][1] - p)
@@ -203,11 +222,15 @@ if __name__ == "__main__":
                 delta_s = -abs(boundry[i][0] - p)
                 foo.append(-v)
 
-    v_bound = [np.max(foo), np.min(foo), -np.max(foo) *
-               ball.rho, -np.min(foo) * ball.rho]
+    v_bound = [
+        np.max(foo),
+        np.min(foo), -np.max(foo) * ball.rho, -np.min(foo) * ball.rho
+    ]
 
-    init_plots(1, 0, simulation_time, np.min(v_bound) * plot_border,
-               np.max(v_bound)*plot_border, "Time: (s)", "Velocity ", "Velocity Plot", "b")
+    init_plots(1, 0, simulation_time,
+               np.min(v_bound) * plot_border,
+               np.max(v_bound) * plot_border, "Time: (s)", "Velocity ",
+               "Velocity Plot", "b")
 
     # init_plots(2, 0, simulation_time, -30, 30, "Time: (s)", "Acceleration", "Acceleration Plot", "r")
 
@@ -216,10 +239,13 @@ if __name__ == "__main__":
     pos_plot, vel_plot = [], []
     for i, p in enumerate(ball.p):
         pos_plot.append(ax[0].plot([], [], label="")[0])
-        vel_plot.append(ax[1].plot([], [],)[0])
+        vel_plot.append(ax[1].plot(
+            [],
+            [],
+        )[0])
 
-    init_plots(2, boundry[0][0], boundry[0][1], boundry[1][0],
-               boundry[1][1], "Y position", "X position", "Animation", None)
+    init_plots(2, boundry[0][0], boundry[0][1], boundry[1][0], boundry[1][1],
+               "Y position", "X position", "Animation", None)
     ax[2].set_zlim(boundry[2][0], boundry[2][1])
     ax[2].set_zlabel("Z position")
 
@@ -228,6 +254,11 @@ if __name__ == "__main__":
     vel_vector = ax[2].quiver(0, 0, 0, 0, 0, 0)
 
     animate = animation.FuncAnimation(
-        fig, animate, interval=0.01, blit=True)
+        fig,
+        animate,
+        interval=1,
+        frames=500,
+    )
 
+    animate.save("./ball_in_box_on_earth.gif")
     plt.show()

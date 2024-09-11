@@ -1,7 +1,7 @@
 import numpy as np
 
 # n = 2 ** 12
-n = 2 ** 10
+n = 2**10
 
 
 def random_init(n):

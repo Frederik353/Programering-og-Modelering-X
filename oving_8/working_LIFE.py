@@ -1,21 +1,24 @@
-import pycuda.driver as cuda
-import pycuda.tools
-import pycuda.autoinit
-import pycuda.gpuarray as gpuarray
-from pycuda.compiler import SourceModule
 import sys
-import numpy as np
-from pylab import cm as cm
-import matplotlib.pyplot as plt
 from time import time
 
-# n = 2 ** 12  # 4k
-n = 2 ** 10
-n_iter = 100_00
-# n_iter = 0  # n_iter=int(sys.argv[2])
+import matplotlib.pyplot as plt
+import numpy as np
+import pycuda.autoinit
+import pycuda.driver as cuda
+import pycuda.gpuarray as gpuarray
+import pycuda.tools
+from pycuda.compiler import SourceModule
+from pylab import cm as cm
+
+# n = 2**14  # 4k
+# n = 2**11  # 4k
+n = 2**8
+# n_iter = 100_00
+n_iter = 0
+# n_iter=int(sys.argv[2])
 n_block = 16
-n_grid = int(n/n_block)
-n = n_block*n_grid
+n_grid = int(n / n_block)
+n = n_block * n_grid
 
 
 def random_init(n):
@@ -27,11 +30,10 @@ def random_init(n):
     return M
 
 
-with open("./øving 8 ferdig/LIFE/kernel.cu", 'r') as f:
+with open("./LIFE/kernel2d.cu", 'r') as f:
     kernel = f.read()
 
 mod = SourceModule(kernel)
-
 
 func = mod.get_function("step")
 C = random_init(n)
@@ -43,12 +45,16 @@ for k in range(n_iter):
     C_gpu, M_gpu = M_gpu, C_gpu
 print("%d live cells after %d iterations" % (np.sum(C_gpu.get()), n_iter))
 
-fig = plt.figure(figsize=(12, 12))
+fig = plt.figure(figsize=(29, 18))
 ax = fig.add_subplot(111)
 fig.suptitle("Conway's Game of Life Accelerated with PyCUDA")
 ax.set_title('Number of Iterations = %d' % (n_iter))
-myobj = plt.imshow(C_gpu.get(), origin='lower', cmap='Greys',
-                   interpolation='nearest', vmin=0, vmax=1)
+myobj = plt.imshow(C_gpu.get(),
+                   origin='lower',
+                   cmap='Greys',
+                   interpolation='nearest',
+                   vmin=0,
+                   vmax=1)
 plt.pause(.01)
 plt.draw()
 m = n_iter

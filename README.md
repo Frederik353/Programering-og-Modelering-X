@@ -17,6 +17,14 @@
 ##### ocilating weight sim
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_7/spring_animation.gif)
 
+## Friction sim
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/friction_sim/animation.gif)
+
+## Conways Game of Life
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/standard.gif)
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/glider%20loop%20p64.gif)
+
+
 ## Solar System / Gravity Simulation 
 ### exercise 9
 

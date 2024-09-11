@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
-import requests
 import pandas as pd
+import requests
 from pyjstat import pyjstat  # pyjstat er for behandling av JSON-stat
-
 
 ### start funksjoner ###
 #  Funksjon for å konvertere til datoformat og sette dette som en Pandas PeriodIndex,
@@ -17,8 +16,9 @@ def dateConv(dataframe):
 
 
 def findFrequency(dataframe):
-    frekvenser = ['måned', 'kvartal', 'uke',
-                  'år', 'year', 'quarter', 'month', 'week']
+    frekvenser = [
+        'måned', 'kvartal', 'uke', 'år', 'year', 'quarter', 'month', 'week'
+    ]
     frek_no = ''
     freq_en = ''
     fmt = ''
@@ -41,6 +41,7 @@ def findFrequency(dataframe):
                 frek_en = 'A'
             return w, frek_no, frek_en, fmt
 
+
 # funksjon for å sette index som PeriodIndex,
 
 
@@ -48,19 +49,26 @@ def setPeriodIndex(frekvens, frek_no, freq_en, fmt, df):
     if frekvens in ['kvartal', 'quarter']:
         # erstatter K med Q, konverterr til datoformat og setter frekensen til Pandas PeriodIndex
         df.index = pd.PeriodIndex(pd.to_datetime(df[frekvens].str.replace(
-            frek_no, freq_en), errors='coerce'), freq='Q-DEC')
+            frek_no, freq_en),
+                                                 errors='coerce'),
+                                  freq='Q-DEC')
     elif frekvens in ['uke', 'week']:
         df.index = pd.PeriodIndex(pd.to_datetime(df[frekvens].str.replace(
-            frek_no, freq_en).add('-0'), format=fmt, errors='coerce'), freq='W-MON')
+            frek_no, freq_en).add('-0'),
+                                                 format=fmt,
+                                                 errors='coerce'),
+                                  freq='W-MON')
     else:
-        df.index = pd.PeriodIndex(pd.to_datetime(
-            df[frekvens], format=fmt, errors='coerce'), freq=freq_en)
+        df.index = pd.PeriodIndex(pd.to_datetime(df[frekvens],
+                                                 format=fmt,
+                                                 errors='coerce'),
+                                  freq=freq_en)
     return frekvens
+
 
 ### slutt funksjoner ###
 
 # URL til tabellenes metadata i PxWebApi, som vi skal poste spørringene mot
-
 
 URL1 = 'https://data.ssb.no/api/v0/no/table/05327'  # KPI-jae
 URL2 = 'https://data.ssb.no/api/v0/no/table/03013'  # KPI total
@@ -68,29 +76,25 @@ URL2 = 'https://data.ssb.no/api/v0/no/table/03013'  # KPI total
 # API-query i JSON mot tabell 05327 - siste 5 år
 
 sp1 = {
-    "query": [
-      {
-          "code": "Konsumgrp",
-          "selection": {
-              "filter": "item",
-              "values": ['JA_TOTAL', 'JAE_TOTAL', 'JE_TOTAL', 'JEL_TOTAL']
-          }
-      },
-        {
-          "code": "ContentsCode",
-          "selection": {
-              "filter": "item",
-              "values": ["KPIJustIndMnd"]
-          }
-      },
-        {
-          "code": "Tid",
-          "selection": {
-              "filter": "top",
-              "values": ["60"]
-          }
-      }
-    ],
+    "query": [{
+        "code": "Konsumgrp",
+        "selection": {
+            "filter": "item",
+            "values": ['JA_TOTAL', 'JAE_TOTAL', 'JE_TOTAL', 'JEL_TOTAL']
+        }
+    }, {
+        "code": "ContentsCode",
+        "selection": {
+            "filter": "item",
+            "values": ["KPIJustIndMnd"]
+        }
+    }, {
+        "code": "Tid",
+        "selection": {
+            "filter": "top",
+            "values": ["60"]
+        }
+    }],
     "response": {
         "format": "json-stat2"
     }
@@ -99,34 +103,29 @@ sp1 = {
 # JSON-spørring mot tabell 03013 siste 5 år
 
 sp2 = {
-    "query": [
-      {
-          "code": "Konsumgrp",
-          "selection": {
-              "filter": "item",
-              "values": ["TOTAL"]
-          }
-      },
-        {
-          "code": "ContentsCode",
-          "selection": {
-              "filter": "item",
-              "values": ["KpiIndMnd"]
-          }
-      },
-        {
-          "code": "Tid",
-          "selection": {
-              "filter": "top",
-              "values": ["60"]
-          }
-      }
-    ],
+    "query": [{
+        "code": "Konsumgrp",
+        "selection": {
+            "filter": "item",
+            "values": ["TOTAL"]
+        }
+    }, {
+        "code": "ContentsCode",
+        "selection": {
+            "filter": "item",
+            "values": ["KpiIndMnd"]
+        }
+    }, {
+        "code": "Tid",
+        "selection": {
+            "filter": "top",
+            "values": ["60"]
+        }
+    }],
     "response": {
         "format": "json-stat2"
     }
 }
-
 
 # Poster spørringene sp1 og sp2 mot metadatas url'er. Resultatene lagres som res1 og res2
 res1 = requests.post(URL1, json=sp1)
@@ -158,9 +157,9 @@ dateConv(df2)  # kan sløyfes eller kommenteres ut.
 # Plot av df2 blir riktig, for her er det bare en serie
 df2.plot()
 
-
 # Standard plot av df1 gir alle 4 intervallene. Resultat er avhengig av om det er dato eller kategori på x-aksen.
-df1.plot()  # standard plot gir alle 4 intervallene og resultat er avhengig av om det er dato eller kategori på x-aksen
+df1.plot(
+)  # standard plot gir alle 4 intervallene og resultat er avhengig av om det er dato eller kategori på x-aksen
 
 # ### slår sammen de to "dataframene"  df1 og df2 med en enkel concat til datasettet "sammen"
 sammen = pd.concat([df1, df2])
@@ -172,7 +171,6 @@ sammen.tail()
 # ### Omstrukturerer (pivoterer) tabellen for å få en bedre visning
 
 df3 = sammen.pivot(columns='konsumgruppe', values='value')
-
 
 # uten kall til dateconv() bruk i stedet måned som index slik:
 # df3 = sammen.pivot(index='måned', columns='konsumgruppe', values='value')
@@ -194,8 +192,10 @@ df3.plot(marker="o", markersize=3, figsize=(12, 8))
 def visfigur(bredde=12, hoyde=6):
     fig, ax = plt.subplots(figsize=(bredde, hoyde))
     #definerer ssb farger på figurene
-    ssbCol = ['#1a9d49', '#075745', '#1d9de2', '#0f2080', '#c78800',
-              '#471f00', '#c775a7', '#a3136c', '#909090', '#000000']
+    ssbCol = [
+        '#1a9d49', '#075745', '#1d9de2', '#0f2080', '#c78800', '#471f00',
+        '#c775a7', '#a3136c', '#909090', '#000000'
+    ]
     plt.xlabel('måned')
     plt.ylabel('index')
     ax.set_title('Figur som viser KPI total og undeliggende KPI serier')

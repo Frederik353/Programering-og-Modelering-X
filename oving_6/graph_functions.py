@@ -1,16 +1,17 @@
-from matplotlib import pyplot as plt
 import numpy as np
+from matplotlib import pyplot as plt
+
 # f(x)= 3x^2+ 7x − 3 og g(x)=x^3−2x+1 i Python.
 
 # B) Finn f(5), g(7), f(3)⋅g(2)  og f(g(3)).
 
 
 def f(x):
-    return (3*(x**2)+(7*x)-3)
+    return (3 * (x**2) + (7 * x) - 3)
 
 
 def g(x):
-    return x**3 - 2*x + 1
+    return x**3 - 2 * x + 1
 
 
 def main():
