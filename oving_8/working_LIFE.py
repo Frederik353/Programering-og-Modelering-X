@@ -10,9 +10,9 @@ import pycuda.tools
 from pycuda.compiler import SourceModule
 from pylab import cm as cm
 
-# n = 2**14  # 4k
+n = 2**14  # 16k
 # n = 2**11  # 4k
-n = 2**8
+# n = 2**8
 # n_iter = 100_00
 n_iter = 0
 # n_iter=int(sys.argv[2])
@@ -20,15 +20,22 @@ n_block = 16
 n_grid = int(n / n_block)
 n = n_block * n_grid
 
+import numpy as np
+
 
 def random_init(n):
-    # np.random.seed(100)
-    M = np.zeros((n, n)).astype(np.int32)
-    for i in range(n):
-        for j in range(n):
-            M[j, i] = np.int32(np.random.randint(2))
+    M = np.random.randint(2, size=(n, n), dtype=np.int32)
     return M
 
+
+# def random_init(n):
+#     # np.random.seed(100)
+#     M = np.zeros((n, n)).astype(np.int32)
+#     for i in range(n):
+#         print(i)
+#         for j in range(n):
+#             M[j, i] = np.int32(np.random.randint(2))
+#     return M
 
 with open("./LIFE/kernel2d.cu", 'r') as f:
     kernel = f.read()

@@ -24,6 +24,13 @@
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/standard.gif)
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/glider%20loop%20p64.gif)
 
+higly paralell running on gpu 
+4k by 4k takes 0.025992393493652344 per iteration
+
+16 by 16k  takes 0.41068100929260254
+of course by then rendering in matplotlib is a way larger bottleneck
+and startup is starting to take quite a long time since we are generating
+268_435_456 random numbers for the start state
 
 ## Solar System / Gravity Simulation 
 ### exercise 9
