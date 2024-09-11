@@ -10,8 +10,8 @@ import pycuda.tools
 from pycuda.compiler import SourceModule
 from pylab import cm as cm
 
-n = 2**14  # 16k
-# n = 2**11  # 4k
+# n = 2**14  # 16k
+n = 2**11  # 4k
 # n = 2**8
 # n_iter = 100_00
 n_iter = 0
