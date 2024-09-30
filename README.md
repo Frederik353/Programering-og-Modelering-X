@@ -1,7 +1,7 @@
 # Programering og Modelering X
 
 All assignments for the course 'Programering og Modelering X' i took on VGS
-and a few graphs made later with the same frameworks.
+and a few graphs i made later by iterating on the same framework i built.
 
 
 ## Solar System / Gravity Simulation 
@@ -10,7 +10,7 @@ and a few graphs made later with the same frameworks.
 ## Friction sim
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/friction_sim/animation.gif)
 
-## Conways Game of Life
+## Conways Game of Life On The GPU
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/standard.gif)
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/glider%20loop%20p64.gif)
 
@@ -23,7 +23,7 @@ of course by then rendering in matplotlib is a way larger bottleneck
 and startup is starting to take quite a long time since we are generating
 268_435_456 random numbers for the start state
 
-![image](https://github.com/user-attachments/assets/0ed9f6d6-bcbb-44da-a55e-fd618fa7b5dc)
+<!-- ![image](https://github.com/user-attachments/assets/0ed9f6d6-bcbb-44da-a55e-fd618fa7b5dc) -->
 
 ## Particle Movement in Magnetic Field
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/extra_oppgave/v0.24.gif)
@@ -40,10 +40,6 @@ and startup is starting to take quite a long time since we are generating
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/matte_4d/oving4/fixed_point_g2_start_0.5.gif)
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/matte_4d/oving4/fixed_point_g3.gif)
 
-
-## sorting random numbers
-![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving%_6/random_numbers_plotted.png)
-
 ## ocilating weight sim
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_7/spring_animation.gif)
 
@@ -55,3 +51,4 @@ and startup is starting to take quite a long time since we are generating
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/extra_oppgave/v0.4.gif)
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/extra_oppgave/v0.41.gif)
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/extra_oppgave/v0.gif)
+
