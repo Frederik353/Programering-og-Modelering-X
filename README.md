@@ -14,14 +14,14 @@ and a few graphs i made later by iterating on the same framework i built.
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/standard.gif)
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_8/LIFE/patterns/glider%20loop%20p64.gif)
 
-higly paralell running on the gpu 
-4k by 4k takes 0.025992393493652344 per iteration
+The computation runs highly parallel on the GPU. For a resolution of 4K by 4K, each iteration takes 0.025992393493652344 seconds per iteration.
 ![image](https://github.com/user-attachments/assets/b978f02d-9264-4252-9eed-d2fbe700406d)
 
-16 by 16k  takes 0.41068100929260254 seconds
-of course by then rendering in matplotlib is a way larger bottleneck
-and startup is starting to take quite a long time since we are generating
-268_435_456 random numbers for the start state
+
+At a resolution of 16K by 16K, the time per iteration increases to 0.41068100929260254 seconds. 
+Naturally, at this point, rendering the results in Matplotlib becomes a significant bottleneck.
+
+
 
 <!-- ![image](https://github.com/user-attachments/assets/0ed9f6d6-bcbb-44da-a55e-fd618fa7b5dc) -->
 
