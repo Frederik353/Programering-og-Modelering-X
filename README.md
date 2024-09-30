@@ -1,23 +1,8 @@
-<<<<<<< HEAD
-
 # Programering og Modelering X
 
 All assignments for the course 'Programering og Modelering X' i took on VGS
 and a few graphs made later with the same frameworks.
 
-
-## collatz conjecture
-![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_2/collatz_conjecture_visualized1.png)
-
-## excercise 6 misc
-### sorting random numbers
-
-![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving%_6/random_numbers_plotted.png)
-
-## exercise 7 misc
-### integral approximation / quadratures
-
-![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_7/integral_aproximations.png)
 
 ## Solar System / Gravity Simulation 
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_9/3d%20matplotlib/animation.gif)
@@ -41,22 +26,29 @@ and startup is starting to take quite a long time since we are generating
 ![image](https://github.com/user-attachments/assets/0ed9f6d6-bcbb-44da-a55e-fd618fa7b5dc)
 
 ## Particle Movement in Magnetic Field
-### extra task
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/extra_oppgave/v0.24.gif)
 
 
 ## collatz conjecture
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_2/collatz_conjecture_visualized1.png)
 
+## Integral approximation / quadratures
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_7/integral_aproximations.png)
+
+## Numerical root finding
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/matte_4d/oving4/bisection_vs_newtons.gif)
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/matte_4d/oving4/fixed_point_g2_start_0.5.gif)
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/matte_4d/oving4/fixed_point_g3.gif)
+
+
+## sorting random numbers
+![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving%_6/random_numbers_plotted.png)
+
 ## ocilating weight sim
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_7/spring_animation.gif)
 
 ## Bouncing ball sim
 ![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_7/ball_in_box_on_earth.gif)
-
-## integral approximation / quadratures
-![](https://github.com/Frederik353/Programering-og-Modelering-X/blob/main/oving_7/integral_aproximations.png)
-
 
 ### more particle in magnetic field at different speeds
 
