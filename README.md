@@ -1,6 +1,6 @@
 # Programering og Modelering X
 
-All assignments for the course 'Programering og Modelering X' i took on VGS
+Theese are all the  assignments for the course 'Programering og Modelering X' i took on VGS
 and a few graphs i made later by iterating on the same framework i built.
 
 
